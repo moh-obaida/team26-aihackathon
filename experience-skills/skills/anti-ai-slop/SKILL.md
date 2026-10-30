@@ -1,0 +1,196 @@
+---
+name: anti-ai-slop
+description: "Use this skill whenever source-level repair is requested for an existing rendered product that looks AI-generated, template-made, sterile, or underdesigned, or whose primary interaction is buried beneath a visual system. Use anti-slop-ui for a review-only verdict. Protect its working identity and core instrument; inspect both excessive decoration and repeated Experience Skills cream, serif, earth-tone restraint; trace material problems to source, repair them with product-specific behavior and expression, then rerender and exercise the main journey."
+license: MIT
+compatibility: "Browser rendering strongly recommended. The optional identity extractor needs Node.js 18+ and reads local source only."
+metadata:
+  version: "1.0.1"
+  collection: experience-skills
+---
+
+# Anti-AI-slop
+
+The active remediation specialist. Take a real, rendered implementation, find every meaningful
+decision that looks generated, templated, unjustified, derivative, filler-driven, or disconnected
+from the product, and replace it with a decision that strengthens the identity already present.
+The target is a product recognizable because its decisions belong together, not a product that
+looks like this repository's taste.
+
+**Distinct from `anti-slop-ui`.** anti-slop-ui is the knowledge, prevention, and gate specialist:
+it judges whether a pattern is justified and supplies alternatives. This skill runs a full
+render → extract identity → sweep → trace → replace → rerender loop on an existing product and owns
+the repair.
+
+## Start here
+
+1. Read `references/_shared/experience-core.md` and `references/_shared/experience-operating-contract.md`.
+2. Read `references/identity-extraction.md` before judging anything. No identity ledger, no findings.
+3. Read `references/_shared/model-instincts.md`: most generated decisions come from those reflexes.
+
+<!-- core-brief:start · GENERATED FROM shared/philosophy/core-brief.md by npm run sync. Do not edit here. -->
+**Core rules in brief.** These apply even before you open `references/_shared/experience-core.md`.
+Read that file (the full rules and evidence levels) before a full review, repair, or build.
+
+- **Verdict before adjectives.** Do not write "clean," "modern," "great idea," or "looks good" until
+  an observation earns it. The user's enthusiasm is not evidence; test the proposal against the goal.
+- **Evidence levels on findings.** E1 rendered, E2 measured, E3 source, E4 documented,
+  E5 screenshot, E6 assumed. If files, a browser, or a terminal are available, look or measure before
+  claiming. Otherwise, name the checks you did not run.
+- **Composition is not alignment.** Empty space needs a stated job, and sparseness is never fixed
+  with filler (stats, tips, promos, decoration).
+- **Personality can come from the environment and causal product behavior.** A standard control
+  changes only if the change makes the task faster or more reliable.
+- **Every treatment has a job.** Every gradient, card, shadow, and animation needs one. No pattern
+  is wrong by category, so keep one that does a job.
+- **Count steps before and after.** If the software already knows an answer, do not ask for it.
+  Keep safeguards on money, deletion, and publishing. Automate mechanics, not judgment.
+- **Check real states, not the showcase:** empty, dense, long content, loading, error, a small
+  screen, the keyboard path.
+- **Route selectively.** Consider the relevant experience skills; activate another only when it
+  can resolve a material concern. No change and no handoff are valid outcomes.
+- **Render meaningful work when a runnable surface exists.** Inspect before and after, stress real
+  states, and say **NOT VERIFIED IN RENDERED OUTPUT** with the reason when rendering is skipped.
+- **Load depth conditionally.** A direction, composition, workflow, control, state, motion, or
+  anti-slop branch must load its required reference before recommendation or edit; unrelated work
+  must not load the whole library.
+- **A large specification is a bigger evidence base, not a bigger checklist.** Preserve exact
+  numbers, exceptions, and locked decisions; keep recommendations, examples, and deferred items
+  from becoming requirements; compress for reasoning, re-open the source for precision.
+<!-- core-brief:end -->
+
+## Use this when
+
+- An existing site or app "looks AI-generated," "looks like every v0/shadcn/Tailwind site," or
+  "has no identity," and the user wants it fixed, not just reviewed.
+- A generated or template-started product must be de-slopped end to end before launch.
+- A conductor's rendered review finds widespread generated patterns that need source-level repair.
+- anti-slop-ui or critical-review found widespread generated patterns across many surfaces.
+
+## Do not use this when
+
+- The question is whether one trend or treatment is justified, or a gate before presenting new UI
+  → anti-slop-ui.
+- The product has no identity yet and needs a direction or system → visual-identity (then return).
+- One page needs exhaustive DOM/CSS inspection for all defects → interface-forensics.
+- A confirmed structural concern exceeds this repair branch → composition-repair; local fixes need no handoff.
+- There is no implementation to render or read.
+
+## Mandatory conditional loading
+
+Before classifying findings, MUST load the taxonomy file for each class found:
+`references/slop-surfaces.md` (decorative, gradient, glass, card, pill, radius, shadow, depth,
+dark-mode, component-library), `references/slop-type-color-copy.md` (typography, color, copy, icon),
+`references/slop-structure-motion.md` (hero, dashboard, bento, empty space, motion, generated
+personality). For systemic diagnosis or repair planning, MUST load `references/repair-loop.md`; it sets the diagnosis and repair level. For final outcome review, MUST load `references/_shared/anti-slop-gate.md`. Before removing a
+gradient, glass, card, pill, dark theme, serif, density, or animation, MUST check
+`references/_shared/justified-trends.md`. To understand what the product category actually needs,
+load `references/_shared/niche-atlas-index.md` and one matching niche file only when its realities can change the repair. When the fix needs
+another structure, load `references/_shared/compositions-index.md` and
+`references/_shared/anti-generic-alternatives.md`.
+
+## Checkpoints
+
+1. **Before any finding:** review-only → diagnose/recommend without edits; anti-slop-ui owns the
+   final review. For repair, has the product been rendered at desktop/phone and an identity ledger written (`references/identity-extraction.md`)? No → render and extract first.
+   Not runnable → mark every finding E3/E5 and say **NOT VERIFIED IN RENDERED OUTPUT**.
+2. **For every candidate finding:** is it on the protected list (intentional, distinctive,
+   working)? Yes → keep it, or strengthen it; do not "fix" identity into neutrality.
+3. **For every flagged treatment:** can you state the job it does here (identity, hierarchy,
+   environment, product meaning)? Yes → justified, keep. No → classify with the taxonomy and assign
+   S0–S3 (`references/repair-loop.md`).
+4. **Before replacing:** does the replacement answer "what would THIS product do instead?" using
+   carriers from the ledger or the niche's realities? If it answers "what does this repository usually
+   prefer?" → choose again.
+5. **After the sweep:** identify the dominant root cause and its level (surface, component,
+   composition, system, identity, interaction) using `references/repair-loop.md`. Group cumulative
+   symptoms by cause and affected jobs; preserve justified repetition. Repair at that level, not by
+   counting changed markers or rewriting copy inside an unchanged structural problem.
+6. **For every S0/S1 finding:** is the source traced (file, selector or component, token or class)?
+   No → trace it, or hand the trace to interface-forensics; never patch a symptom at a leaf when a
+   token, shared component, or layout convention produced it.
+7. **After each repair group:** compare the same rendered routes, states, and sizes: is the original
+   dominant weakness materially reduced, without a new dominant weakness or lost functionality?
+   No → continue repair or record unresolved; captures and edits alone never mean success.
+8. **Before finishing:** passes both originality tests: (a) without logo and name, could this belong
+  to twenty unrelated generated sites? (b) is it distinctive only because it is weird? Either yes →
+  continue.
+9. **Before presenting:** every systemic S0/S1 is visibly resolved across the affected routes, or
+   explicitly open with a reason. A local polish pass does not close a finding whose shared pattern
+   still dominates the rendered product. If the baseline is already strong, or the systemic cause
+   is no longer visible, a small change is enough; do not manufacture a larger redesign. Report every
+   S0/S1 as fixed, justified, or open with a reason, using the evidence format and naming what was
+   protected.
+10. **Symmetric slop check:** inspect both excessive styling and underdesigned restraint. Warm cream, serif display, muted earth accents, hairlines, small uppercase labels, and quiet whitespace can form an Experience Skills house style when they have no product reason. Check the three-second task test, instrument prominence, active-state energy, and whether a live product has become a text document. Preserve justified density, color, play, and interaction character.
+
+## Workflow
+
+1. **Render** the current product: primary routes, a sparse and a dense state, desktop and phone.
+   Record viewport, route, state (`references/_shared/experience-operating-contract.md`).
+2. **Extract identity** into the ledger; optionally run `node scripts/extract-identity.mjs <src>`
+   for a token census, library-default matches, and slop class stacks (prompts, not verdicts).
+3. **Protect** the intentional character: list what stays and why.
+4. **Scan every surface:** shell, hero, sections, cards, forms, dashboards, empty/error states,
+   footer, motion on load/scroll/hover. Group repeated patterns by their shared source and affected
+   route jobs; note when distinct jobs inherit the same composition without a product reason. Use
+   `references/_shared/design-cliches.md` as a checklist, not a verdict.
+5. **Classify** each finding with the taxonomy files and severity S0–S3.
+6. **Trace** each S0/S1 to its implementation (token, global CSS, shared component, utility
+   classes, copy source). Hand exact cascade work to interface-forensics when it is non-trivial.
+7. **Propose replacements** that fit the ledger and niche (`references/repair-loop.md` replacement
+   matrix); for structural replacements compare materially different alternatives only when the choice is open.
+8. **Repair** S0 → S1 → S2 in coherent groups at the source (tokens and shared components first).
+   Match repair scope to cause: local cause, local fix; shared token, component, or layout cause,
+   repair that system across affected routes. Change page composition when the common structure is
+   the problem, preserving route mechanics, content, and the identity ledger's protected carriers.
+9. **Rerender** the same routes, sizes, and states.
+10. **Compare** before/after side by side; confirm the diagnosed systemic pattern has materially
+    receded across affected routes. Revisit its source if it still governs hierarchy, composition,
+    or product specificity. Revert changes that weaken identity or usability.
+11. **Check for new slop** introduced by the repair.
+12. **Verify** with the originality tests, contrast, responsive checks, and the report.
+
+## Identity extractor
+
+`node scripts/extract-identity.mjs <file-or-dir> [--json] [--limit N]` counts declared fonts,
+colors, radii, shadows, blur, gradients, and motion in source; flags values that match common
+component-library and framework defaults; and finds "slop stacks" (three or more generated-default
+utilities on one element, such as `rounded-2xl shadow-xl backdrop-blur`). Exit codes: 0 no default
+signatures or stacks, 1 findings, 2 usage error. A count is a question for the ledger, never proof;
+a product can intentionally use a default.
+
+## Hand-offs
+
+- **interface-forensics:** exact DOM/cascade tracing before repair, and detail verification after.
+  Sequence for large jobs: anti-ai-slop (conceptual findings) → interface-forensics (trace) →
+  anti-ai-slop (identity-compatible replacements) → implement → interface-forensics (verify).
+- **visual-identity:** when composition is sound but product interchangeability remains beyond this branch.
+- **composition-repair:** when an unresolved structural cause cannot reasonably be solved here.
+- **interaction-design / state-design:** when boilerplate behavior or feedback needs specialist depth.
+  Send the operating contract's compact handoff; an unresolved dependency prevents completion.
+- **critical-review:** when unsure the repaired version beats the original.
+
+## Completion criteria
+
+- An identity ledger and protected list exist, and protected characteristics survived the repair.
+- Every surface in scope was swept; each finding uses the evidence format with severity.
+- S0/S1 findings are fixed at source, justified, or open with a reason; S2/S3 are listed.
+- Inspected before/after renders show the dominant cause reduced at its diagnosed level across the
+  affected jobs, or explicitly say UNVERIFIED / unresolved; do not claim slop resolved from edits.
+- The outcome gate is PASS, REPAIR, or ESCALATE internally; no material dependency is unowned.
+- Both originality tests were answered with evidence; no new dominant weakness or slop was introduced.
+- The report says what was kept and why, not only what was removed.
+
+## References
+
+- `references/identity-extraction.md` — identity ledger, intent signals, library-default values, protected list
+- `references/repair-loop.md` — severity, evidence format, job-grounded replacement, trace and verify loop, originality tests, report
+- `references/_shared/` — generated copies: `experience-core.md`, `experience-operating-contract.md`,
+  `anti-slop-gate.md`, `model-instincts.md`, `design-cliches.md`, `design-vs-decoration.md`, `product-identity.md`,
+  `product-copy.md`, `justified-trends.md`, `anti-generic-alternatives.md`, `compositions-index.md`,
+  `logo-removal-test.md`, `identity-preserving-repair.md`, `niche-atlas-index.md`,
+  `niche-business.md`, `niche-developer.md`, `niche-ai.md`, `niche-games.md`, `niche-education.md`,
+  `niche-commerce.md`, `niche-finance.md`, `niche-media.md`, `niche-social.md`, `niche-health.md`,
+  `niche-public.md`, `niche-travel.md`, `niche-physical.md`, `niche-creative.md`,
+  `niche-personal.md`, `third-party-notices.md`
+- Worked example: `references/_shared/identity-preserving-repair.md` (a repair that keeps a gradient
+  and removes the purple glow); logo test anchor: `references/_shared/logo-removal-test.md`.

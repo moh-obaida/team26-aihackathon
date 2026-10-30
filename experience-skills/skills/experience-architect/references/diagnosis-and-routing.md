@@ -1,0 +1,304 @@
+# Diagnosis and Routing
+
+Load at step 3–4: turn the user's symptoms into named problems, pick specialists, and order them.
+
+Sections: Problem Taxonomy: From Symptoms to Problems · Routing · Cross-Skill Composition
+
+## Problem Taxonomy: From Symptoms to Problems
+
+Users describe symptoms. The router's job is to translate symptoms into problem classes that
+specialists can act on. Many symptoms map to more than one class; confirm with observation.
+
+### Symptom dictionary
+
+| The user says | Likely problem classes | Confirm by |
+|---|---|---|
+| "It looks empty" / "too much whitespace" | DEAD SPACE, FAKE MINIMALISM, missing environment, sparse state | Measure first-viewport content coverage; check if the state is sparse data |
+| "It looks clean" (said as praise, by an agent) | Possibly ALIGNED NOT COMPOSED, FAKE PREMIUM | Grayscale test; logo test; coverage |
+| "It looks generic" / "AI-made" | GENERIC, TREND COPY, design clichés, generic copy | Run anti-slop gate; logo test |
+| "It feels heavy / unbalanced" | Disproportionate allocation, supporting surface dominant, optical imbalance | Compare rendered mass with useful content/action, neighboring weight, and user priority |
+| "It feels cheap" | Weak typography, inconsistent spacing, noise, low-quality imagery | Inspect type scale, spacing rhythm, asset quality |
+| "It's cluttered" / "busy" | NOISE, CRAMPED, FLAT HIERARCHY, too many P0s | Count competing emphases; rank information |
+| "I can't find X" | Discoverability, IA, WRONG FOCAL POINT | Path from landing to X; label clarity |
+| "It takes forever" | Workflow friction (steps), WAITING TAX, performance | Map steps; time the flow; check network |
+| "Too many clicks" | NAVIGATION TAX, CONFIRMATION TAX, SERIAL WORK, UNNECESSARY CHOICE | Map and count |
+| "Why does it ask me that again?" | REDUNDANT INPUT, MEMORY FAILURE | Check what the system knows at that step |
+| "I'm not sure what happened" | Missing feedback, state ambiguity, no motion for events | Trigger the action; observe response |
+| "It feels flat / lifeless" | Missing event motion, weak identity, static state changes | Watch state changes; check motion |
+| "The animations are annoying" | Motion slop, non-event motion, slow sequences | Inventory animations; time them |
+| "It broke on my phone" | Overflow, collisions, target size, keyboard overlap | Render at the reported size |
+| "It says 'Something went wrong'" | Collapsed error states, transport vs product confusion | Trigger failure modes |
+| "I lost my work" | MEMORY FAILURE, missing drafts, validation clearing input | Interrupt the flow; refresh; fail validation |
+| "Users keep asking support about X" | Terminology, discoverability, status ambiguity | Read the question; find where the product answers it |
+| "Is this design good?" | Needs critical review, not reassurance | Apply critical-review workflow |
+| "Use all skills" / "full Experience Skills pass" | Explicit complete-project orchestration | Consider all siblings; activate only those that address material risks, then build and verify |
+| "Audit this page" / "go over every inch" / "check the CSS too" | Page-scoped surface defects requiring rendered and source evidence | Inspect every region, control, state, and trace significant findings to source |
+| "Remove the AI look from our site" / "it looks like every v0 site" | Generated decisions across an existing product; identity buried | Render, extract the identity, sweep every surface, classify and trace generated patterns |
+| "Make it pop" / "make it modern" | Vague; often identity or hierarchy | Ask what feels wrong now; observe first |
+
+When visual symptoms share an allocation or hierarchy cause, route that cause once. A dominant
+low-value surface may need composition-repair alone; a balanced but generic page may need
+visual-identity; repeated generated shells may need anti-ai-slop; a finished product needing
+prioritization may need only critical-review. Add another skill only for an independently observed
+concern or unresolved dependency, not because the page is visual.
+
+### Problem classes by specialist
+
+- **Composition:** V1–V10, R1–R7 in the visual problem taxonomy.
+- **Identity:** I1–I6.
+- **Content/filler:** C1–C3.
+- **Workflow:** F1–F10 and secondary types.
+- **Interaction:** restated context, unfamiliar controls, unsafe actions, weak feedback, target size.
+- **States:** missing states, dishonest states, transport/product confusion.
+- **Motion:** non-event motion, missing event motion, slowness, no reduced motion.
+- **Product friction:** terminology, IA, concepts, continuity, first-use/expert burden.
+- **Judgment:** premature praise, enthusiasm mistaken for quality, unexamined proposals.
+
+### Ranking problems
+
+Rank by user impact, not by how easy they are to talk about:
+
+1. Blocks or corrupts the task (broken, overflow hiding actions, lost data, dishonest state)
+2. Slows frequent tasks (friction on constant or routine paths)
+3. Undermines trust or comprehension (wrong focal point, confusing terms, vague errors)
+4. Weakens identity or quality perception (generic, noise, dead space)
+5. Polish (rhythm, minor inconsistencies)
+
+A slop problem on the marketing page may matter less than a redundant input on a task done
+fifty times a day. Say so when you rank.
+
+## Problem classes the router must distinguish
+
+Each class names its observable signal, so a symptom can be confirmed before routing.
+
+| Problem class | Observable signal | Route to |
+|---|---|---|
+| Full product pass | User explicitly requests all skills or complete starter-to-finish experience work | use-all-skills |
+| Page-scoped forensic audit | User asks for detailed inspection of one route or component, including CSS and micro-UX | interface-forensics |
+| Visually generic | Fails the logo test; template structure; trend treatments | anti-slop-ui, visual-identity |
+| Structurally convergent | The primary screen has a category-default silhouette that could serve unrelated products despite open design space | visual-identity; composition-repair only if hierarchy or instrument dominance is unresolved |
+| Clear quality upside in open design space | The product works, but observed hierarchy, expression, route composition, interaction feedback, or mobile workflow materially under-serves its job; relevant decisions remain open | Route only the specialist(s) that own the demonstrated gap, such as visual-identity, composition-repair, interaction-design, state-design, or responsive-validation |
+| Generated look across an existing product | Many surfaces use library defaults, generated heroes, glow, glass, card grids, generic copy; the user wants it repaired end to end | anti-ai-slop (with interface-forensics for traces) |
+| Visually chaotic | Many accents, competing emphases, no focal point in a squint test | composition-repair; anti-slop-ui only for independently harmful generic patterns |
+| Visually empty | Sparse allocation without a framing job, missing next action, or missing expression | composition-repair for allocation; empty-state-design for missing next action; visual-identity for unresolved expression |
+| Hierarchy failure | Wrong or missing focal point; supporting content outweighs the job; important content buried; optical imbalance despite geometric symmetry | composition-repair |
+| Workflow too long | Step, decision, and navigation counts high for frequency | workflow-compression |
+| Repeated configuration | Same setup each session | workflow-compression |
+| Confusing controls | Mis-clicks, hesitation, restated scope, unclear affordance | interaction-design |
+| Inappropriate interaction novelty | Custom version of a standard control without measurable gain | interaction-design, critical-review |
+| Bad information architecture | "Where is…?" questions; duplicate locations; vague labels | product-friction |
+| Poor state handling | Generic errors, blank loading, false failures, lost input | state-design |
+| Weak empty state | Blank or stuffed low-content surfaces | empty-state-design |
+| Responsive failure | Overflow, collisions, clipped actions at some size or zoom | responsive-validation, composition-repair |
+| Motion without meaning | Uniform entrances; silent important changes | motion-design |
+| Identity mismatch | Identity intensity wrong for the archetype (spectacle on a tax form; blandness on a game) | visual-identity, critical-review |
+| Design cliché | Gradients, glass, pills, KPI tiles, eyebrows without jobs | anti-slop-ui |
+| Inaccessible experience | Keyboard traps, contrast failures, color-only meaning, small targets | interaction-design, responsive-validation |
+| Sparse operational page | Greeting + buttons on a surface users return to daily | empty-state-design, composition-repair |
+| Overly dense focused page | A single-purpose page crowded with secondary content | composition-repair, product-friction |
+| Design direction mismatch | The visual direction contradicts audience or context | visual-identity (selection procedure) |
+| Product-specific identity missing | Nothing derived from the product's mechanic, object, or content | visual-identity |
+| Proposed redesign worse than current | A proposal adds cost without serving the goal better | critical-review, then the domain specialist |
+
+## Specialist compositions
+
+Recipes for common multi-class problems. Order matters: structure before surface, judgment last.
+
+| Situation | Specialists, in order | Handoff between them |
+|---|---|---|
+| Generic sparse dashboard | empty-state-design → composition-repair → visual-identity → anti-slop-ui | Real state list → focal and viewport budget → environment carriers → gate |
+| Slow creation flow | workflow-compression → product-friction → interaction-design | Counted flow and known-context inventory → concept and naming fixes → control design |
+| Live multiplayer experience feels lifeless | state-design → motion-design → visual-identity → composition-repair | State matrix and events → event motion specs → world and color roles → stage composition |
+| De-AI an existing product | anti-ai-slop → interface-forensics → anti-ai-slop → critical-review | Identity ledger and protected list → exact source traces → identity-compatible replacements, rerendered → verdict against the original |
+| Deep page audit | interface-forensics → relevant domain specialist → interface-forensics | Evidence table and root causes → domain decision when needed → same-state and stress verification |
+| Proposed visual redesign | critical-review → visual-identity → anti-slop-ui → composition-repair | Goal and comparison → direction check → justification of treatments → rendered verification |
+| Join / sign-in feels generic | composition-repair → visual-identity → interaction-design → anti-slop-ui | Dead space measured → environment derived → control kept standard → gate |
+| Mobile breaks | responsive-validation → composition-repair → interaction-design | Failing sizes → restructure → reach and targets |
+| Long job holds users hostage | state-design → workflow-compression | Job lifecycle and honesty → waiting tax removed |
+
+After loading a specialist, carry its output forward explicitly (for example the counted flow, the
+state matrix, the chosen direction); do not let the next specialist re-diagnose from scratch.
+
+## Routing
+
+How to pick specialist skills from a diagnosis. Specialists are sibling skills in this
+collection. Any of them may or may not be installed.
+
+### Scope narrows the graph
+
+Classify scope first (the operating contract's scope gate). COMPONENT scope does not activate
+page-structure or direction work: route to the one specialist that owns the defect, inside the
+existing surface. Structure-level specialists (composition-repair, visual-identity) need a
+confirmed SURFACE-or-larger concern, such as a dominant region, a buried instrument, or an
+interchangeable identity. A component symptom with a systemic cause is re-scoped out loud, with
+the observation that shows it.
+
+### Checking what is installed
+
+Look for sibling skill folders next to this one (for example in the agent's skills directory),
+or rely on the agent's skill list. If a specialist is not installed, apply the fallback
+method summarized in the table below. It is a compressed version, not a replacement; mention
+to the user that the full skill exists.
+
+### Routing table
+
+| Specialist | Route here when | Fallback method if not installed |
+|---|---|---|
+| use-all-skills | Explicit all-skills request or complete substantial starter-product build | Inspect job, loop, instrument, and invariants; choose Build or Audit Mode; consider every specialist, activate a justified subset, implement, verify primary journeys, and review only unresolved material concerns. |
+| interface-forensics | Audit this exact page, find every meaningful issue, check CSS/source, or repair a specific rendered surface | Render and scan the full page. Record viewport/state. For each significant defect trace element → component → winning style/behavior → root cause; fix and rerender. State unverified gaps. |
+| composition-repair | Dead space, no focal point, cramped, centered-but-not-composed, overflow, collisions, sticky chrome eating the viewport, scroll confusion | Rank content (P0–P4). Give P0 the focal position and size. Relate content to viewport (not just centered). Remove container soup. Render at 3 sizes. Check overflow and overlaps. |
+| visual-identity | Generic look, fails the logo test, personality on controls instead of environment, trend copying | List the product's domain, content, mechanics, audience. Derive 2–4 identity carriers (type voice, color roles, motif, surface). Apply them to the environment, not to controls. Run the logo test. |
+| workflow-compression | Too many steps, repeated inputs, choice screens with one option, confirmations everywhere, waiting | Map every step. Tag friction (redundant input, unnecessary choice, confirmation tax, navigation tax, etc.). Remove or default what the system knows. Keep safety and judgment. Count before/after. |
+| interaction-design | Confusing or clever controls, restated context, unsafe destructive actions, poor forms, keyboard/touch gaps | Prefer familiar controls. Scope actions to known context. Undo for reversible, confirm for irreversible. Label actions by outcome. Check keyboard, focus, target size. |
+| state-design | Only the happy path exists; vague errors; loading and retries unclear; long jobs block the user; optimistic UI lies | List states (empty, loading, partial, error types, offline, stale, long-running). Separate transport from product state. Design each honestly with recovery. |
+| motion-design | Everything fades/slides; events go unnoticed; product feels flat; motion janky or inaccessible | Identify real events (arrival, transfer, resolution...). Give each a sequenced, short, interruptible motion with a reduced-motion alternative. Remove motion from non-events. |
+| product-friction | Whole product feels hard; users get lost; terminology confusing; duplicate concepts; support burden | Build a friction ledger: issue, frequency, severity, time cost, cognitive cost, risk, repair. Rank by frequency × cost. |
+| responsive-validation | Breaks at some size; zoom, RTL, touch, or keyboard issues; "works on my screen" | Check a matrix (large desktop, laptop, short laptop, tablet, common phone, small phone, 200% zoom, RTL if relevant). Look for overflow, collisions, clipped content, sticky obstruction, target size. |
+| empty-state-design | Zero/one item, first-run, no results, filtered-empty, no permission; sparse page feels unfinished or stuffed with filler | Explain the absence specifically. Offer the most useful next action. Surface real context. Remove filler. |
+| anti-ai-slop | An existing rendered product looks generated or templated and must be repaired while keeping its identity | Render. Write an identity ledger and protected list. Sweep every surface; classify each generated pattern (decorative, gradient, glass, card, pill, radius, shadow, type, color, copy, hero, dashboard, bento, icon, dark mode, depth, motion, empty space, library default). Trace S0/S1 to source; replace with what this product would do; rerender; answer the twenty-sites and weirdness tests. |
+| anti-slop-ui | Looks AI-generated or template-made; gradients, glass, pills, cards, fake stats, generic copy | Run the anti-slop gate. For each flag, state its job or remove it. Replace generic copy with specific copy. |
+| critical-review | User asks "is this good?"; enthusiastic proposal; redesign to evaluate; about to endorse own work | State goal, proposal, constraints. Evaluate against the goal and the current state. Find hidden costs. Verdict with evidence. No praise before evaluation. |
+
+### Routing by product type
+
+Product type changes emphasis, not the method. For whole-product design, product mechanics and the core instrument come first. A relevant niche profile can supply constraints before an optional system comparison; it never chooses a style.
+
+| Product | Usual first specialists | Watch for |
+|---|---|---|
+| Marketing website | visual-identity, composition-repair, anti-slop-ui | Hero clichés, feature-grid rhythm, generic copy |
+| Web or mobile app | workflow-compression, interaction-design, state-design | Redundant input, modal overuse, missing states |
+| Game | visual-identity, motion-design, state-design, interaction-design | Operational UI in experiential surfaces; overdesigned join flows; event feedback |
+| Admin / internal tool | workflow-compression, product-friction, composition-repair | Serial work, expert tax, dense-but-unscannable tables |
+| Content / editorial / docs | composition-repair, visual-identity | Cards replacing editorial hierarchy; line length; navigation |
+| Commerce | workflow-compression, interaction-design, composition-repair | Merchandising between user and purchase; redundant choices |
+| Developer tool / CLI | workflow-compression, interaction-design, state-design | Interactive interrogation; unclear progress and errors |
+| Mobile-first | responsive-validation, interaction-design | Reach, targets, bottom-sheet overuse, keyboard overlap |
+| Desktop app | interaction-design, workflow-compression | Keyboard support, dense layouts, multi-window state |
+| Live / real-time | state-design, interaction-design, motion-design | Status visibility, scoped controls, reconnection honesty |
+| Public service | workflow-compression, interaction-design, critical-review | Spectacle over clarity; wizard overuse; error recovery |
+| Data-heavy | composition-repair, anti-slop-ui, state-design | KPI-card clichés; charts that answer nothing; stale data |
+
+### Stop conditions
+
+Stop adding specialists when:
+
+- The top-ranked problems are all covered.
+- For BUILD or quality-focused REPAIR, no credible high-value quality opportunity remains in the open decisions. A working product can still have such an opportunity; a strong, resolved area is evidence against another specialist.
+- The next specialist would address only low-impact issues.
+- The user asked for a narrow change.
+
+For REVIEW and VERIFY, keep the task defensive even when a possible creative opportunity is visible;
+report it only when relevant to the requested judgment. Do not expand verification into feature
+design.
+
+## Cross-Skill Composition
+
+This is a dependency guide, not a mandatory phase sequence. Establish product mechanics and the
+relevant job first; settle a downstream decision only when it depends on an unresolved upstream
+one. A short task can resolve one local decision and stop. Visual expression can be developed
+alongside structure and behavior when its product basis is clear, and verification can feed back
+into any earlier choice.
+
+### General order
+
+1. **Product truth and job** (experience-architect; product-friction or workflow-compression when
+   unresolved): establish what the user is doing and which steps are required.
+2. **State, structure, and interaction** (state-design, composition-repair, empty-state-design,
+   interaction-design as needed): resolve the dependencies that affect the core job.
+3. **Visual expression and motion** (visual-identity, motion-design as needed): make behavior,
+   hierarchy, and product character reinforce the same job; do not wait for a separate visual phase
+   when the relevant mechanics are already clear.
+4. **Responsive and journey verification** (responsive-validation and relevant specialists): check
+   the working job, state continuity, and real conditions; return findings to whichever decision
+   caused the failure.
+5. **Judgment** (anti-slop-ui, anti-ai-slop, critical-review): gate only material unresolved
+   concerns; anti-ai-slop reconstructs what still looks generated.
+
+Resolve a dependency before committing to choices it would invalidate, such as animating a screen
+whose workflow is still open. Do not serialize independent visual, state, or interaction work just
+to follow this list.
+
+### Conditional escalation edges
+
+After a specialist reports a finding or makes a material change, check these edges. Follow an edge
+only when its trigger is observed and the next skill owns a still-open decision. Record the trigger
+and consequence in the handoff; an edge is not a standing pipeline.
+
+| Current skill or finding | Trigger for another owner | Activate |
+|---|---|---|
+| anti-ai-slop identifies unresolved hierarchy, mass, density, rhythm, or structure | Structural decision exceeds what its direct repair branch can reasonably resolve | composition-repair |
+| anti-ai-slop finds interchangeability with sound composition | Identity resolution exceeds the protected-ledger repair | visual-identity |
+| anti-ai-slop finds boilerplate actions, feedback, or persistence | Product semantics need specialist depth | interaction-design or state-design |
+| visual-identity finds the working screen generic because its structure buries the instrument or route job | Direction alone cannot resolve the independently material structure weakness | composition-repair |
+| interaction-design changes async feedback, persistence, recovery, or cross-surface state | State ownership or a consequential transition also changes | state-design |
+| state-design changes a transition's available action or its task feedback | A control, safety choice, input path, or action label needs redesign | interaction-design |
+| composition-repair changes responsive hierarchy or mobile working-surface distribution | The core task, instrument, or supporting panel changes at narrow or short sizes | responsive-validation |
+| responsive-validation finds no overflow but the task is still fragmented across compressed regions | Recomposition, not breakpoint patching, can restore task continuity | composition-repair |
+
+### Concern coverage check
+
+Before implementation, list each confirmed material concern and its owner. Activate every owner needed
+to resolve an independent concern; one specialist may cover two concerns only when its method and
+output actually address both. After each handoff, re-check the list and the conditional edges above.
+Stop when every material concern is resolved, intentionally preserved with evidence, or explicitly
+blocked/unverified. The smallest useful graph is selective; it is not automatically one skill.
+
+### Common compositions
+
+#### A visually blank dashboard
+```
+experience-architect
+→ empty-state-design   (is it genuinely empty, or sparse? what is the real next action?)
+→ composition-repair   (focal point, viewport budget, remove dead space)
+→ visual-identity      (environment carriers, if the archetype allows)
+→ anti-slop-ui         (no fake stats or filler)
+→ critical-review      (is it actually better than before?)
+```
+
+#### A 12-click setup flow
+```
+experience-architect
+→ workflow-compression (map, classify, remove, recount)
+→ product-friction     (terminology, concepts, why the flow exists)
+→ interaction-design   (inline controls, defaults, confirmation vs undo)
+```
+
+#### A live product that feels flat
+```
+experience-architect
+→ state-design         (what states exist, which transitions matter)
+→ motion-design        (event-driven motion for those transitions)
+→ visual-identity      (environment and state colors)
+```
+
+#### Mobile breaks
+```
+experience-architect
+→ responsive-validation (find where and how it breaks)
+→ composition-repair    (repair the structure)
+→ interaction-design    (reach, targets, keyboard, sheets)
+```
+
+#### Join page / sign-in page feels generic
+```
+experience-architect
+→ composition-repair   (aligned vs composed; viewport budget)
+→ visual-identity      (environment, not the textbox)
+→ interaction-design   (keep the input conventional, fast, accessible)
+→ anti-slop-ui         (no segmented-box gimmick, no fake premium)
+```
+
+#### Reviewing someone's proposed redesign
+```
+experience-architect
+→ critical-review      (goal, proposal, current state, hidden costs)
+→ one domain specialist to substantiate the key finding
+```
+
+### Avoiding duplication
+
+- Run the shared evaluation (rubric, gate) once at the end, not per specialist.
+- Each specialist should pick up the previous one's findings rather than re-diagnosing.
+- If two specialists recommend conflicting things (identity wants a dramatic hero; workflow
+  wants the task above the fold), resolve explicitly using the page archetype and the user's
+  goal, and say which won and why.

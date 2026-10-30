@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.DS_Store
+# Local, owner-specific terms checked by validate-repo (never commit)
+.private-terms
+# Screenshot output from layout scripts
+shots/
+screenshots/
+skills-lock.json
+
+# Raw agent transcripts from run-agent-evals (reports and summaries are kept)
+tests/evals/results/**/*.jsonl
+tests/evals/results/**/*.answer.md

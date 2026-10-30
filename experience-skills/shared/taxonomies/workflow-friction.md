@@ -1,0 +1,68 @@
+# Workflow Friction Taxonomy
+
+Canonical names for the ways a workflow wastes the user's time. Use these names in findings so
+reports are comparable across tasks.
+
+| Code | Name | Definition | Typical signal | Typical repair |
+|---|---|---|---|---|
+| F1 | REDUNDANT INPUT | The user supplies information the system already has | Re-entering email, re-choosing language, re-selecting the current item | Carry forward; prefill; infer and show |
+| F2 | UNNECESSARY CHOICE | A decision with only one meaningful answer | Picker with one valid option; "Continue" screens with no real alternative | Auto-select and display; remove the step |
+| F3 | REPEATED CONFIGURATION | The same setup performed repeatedly | Same filters, export settings, or game options every session | Remember last-used; saved presets; smart defaults |
+| F4 | NAVIGATION TAX | A tiny operation requires a route or screen change | Rename via settings page; toggle via edit modal | Inline edit; contextual controls |
+| F5 | CONFIRMATION TAX | A harmless or reversible action asks permission | "Are you sure?" on archive, reorder, or status change | Act immediately with undo |
+| F6 | SERIAL WORK | Bulk-capable work done one item at a time | Tagging 30 files individually | Multi-select and bulk actions |
+| F7 | MEMORY FAILURE | The software forgets useful context | Filters reset; drafts lost; scroll position lost; wizard restarts | Persist state; continue where you left off |
+| F8 | WAITING TAX | The user babysits background work | Must keep a tab open during a 3-minute job | Background job with status and notification |
+| F9 | DEAD END | No useful next action after an outcome | "Success!" with only a Home button | Surface the likely continuation |
+| F10 | EXPERT TAX | Frequent users are forced through the beginner path | No shortcuts, no direct entry, no defaults | Shortcuts, remembered choices, compact power controls |
+| F11 | MODE TAX | The same input does different things in states the user must track | Edit mode vs view mode; host vs player mode; hidden toggles | Remove the mode (edit in place); make the mode unmistakable |
+| F12 | INTERRUPTION TAX | Something blocks or covers the task before or during it | Arrival modals, stacked banners, promotions over the form | Non-blocking messages; defer promotions until after the task |
+| F13 | CONTEXT-SWITCH TAX | The user must leave the current tool or screen to get what the task needs | Checking email for a code; opening another tab to find an ID | Bring the information into the flow (autofill, lookup, inline) |
+| F14 | HIDDEN-STATUS TAX | The user cannot tell whether something worked, is pending, or failed | Silent saves; jobs with no status; stale data shown as current | Visible status, timestamps, "last updated", honest pending states |
+| F15 | DUPLICATE-OBJECT TAX | Two concepts or copies do the same job, so users manage both | Templates and presets; folders and collections; copies drifting apart | Merge concepts; one canonical object with views |
+
+## Secondary friction types
+
+Less common, still worth naming:
+
+- **LOOKUP TAX:** the user must leave to find information needed to proceed (an ID, a code, a price).
+- **RECOVERY TAX:** the product causes an error the user must fix (lost input after validation failure).
+- **SCOPE RESTATEMENT:** the user must specify context already implied by the current selection
+  or state (for example "Correct for Team A" when Team A is the one answering). Often a
+  special case of REDUNDANT INPUT with its own interaction repair: scoped controls.
+- **LOOKUP TAX:** see F13 for the general case.
+- **FORMAT TAX:** the user must match a rigid format the software could normalize
+  (phone numbers, dates, codes with dashes).
+
+## Severity guidance
+
+Severity is frequency × cost × risk:
+
+- **Frequency:** how often the step occurs per user per week, and how many users hit it.
+- **Cost:** actions, decisions, and seconds per occurrence.
+- **Risk:** probability and cost of error the friction causes (or prevents).
+
+A small cost on a high-frequency path often outranks a large cost on a rare path.
+
+## When a step earns its place
+
+Do not label a step wasteful from its count alone. First identify what it protects or enables and
+what evidence requires it. Extra input, account or identity gates, permission requests, waits,
+screens, and confirmations may be justified by explicit product requirements, observed product
+truth, technical necessity, privacy, safety, legal duty, financial or public consequence, or a
+meaningful user decision. Keep the smallest step that adequately serves that reason.
+
+When a new policy or gate is proposed but the source is silent, call it an open product decision,
+not a requirement. Prefer a reversible, lower-friction path when it is technically and
+product-appropriate; identity or synchronization can be offered later when useful. Preserve explicit
+requirements even when they add friction, and design the required step clearly. A dramatic visual
+transition, a profile screen, or a convenient implementation pattern is not by itself a reason.
+
+## Not friction
+
+Do not flag as friction:
+
+- A confirmation before irreversible, costly, or public actions
+- The step where the user's judgment is the value
+- Legally required disclosure or consent
+- One-time orientation for a genuinely unfamiliar concept

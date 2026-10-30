@@ -1,0 +1,198 @@
+---
+name: experience-architect
+description: "Use this skill whenever the user asks to build, fix, finish, review, redesign, or improve a user-facing product surface—page, screen, dashboard, form, flow, game, app, or CLI—or says it feels boring, generic, empty, confusing, slow, broken, cramped, modern, fun, or off. Use it for substantial product-facing work when the right specialist is unclear or several concerns interact. Diagnoses the observable problem, activates the smallest ordered specialist graph, loads only required depth, enforces rendered evidence when runnable, and ends with a quality gate."
+license: MIT
+metadata:
+  version: "1.0.1"
+  collection: experience-skills
+---
+
+# Experience Architect
+
+The entry point of the collection. It does not contain the design encyclopedia. It turns a
+vague symptom into named problems, pulls in only the specialists those problems need, runs a
+build-verify-critique loop, and applies a final gate.
+
+## Start here
+
+1. Read `references/_shared/experience-core.md`. Its operating rules apply to everything below.
+2. Read `references/_shared/experience-operating-contract.md`; use its significance gate, named
+   recipes, render contract, evidence contract, and handoff artifact.
+3. Establish the mode: REVIEW (report only), REPAIR (change and verify), BUILD (create), or VERIFY
+   (check finished work). Honor it. Then classify the scope (COMPONENT, SURFACE, PAGE, FLOW, PRODUCT)
+   with the contract's scope gate before routing, and for SURFACE or larger build its experience
+   context once.
+4. If the input is a long or complex specification — a PRD, business plan, or brief with many
+   roles, workflows, states, cross-cutting rules, or a mix of requirements, recommendations,
+   examples, and deferred items, not length alone — read
+   `references/_shared/specification-pressure.md` before diagnosing.
+
+<!-- core-brief:start · GENERATED FROM shared/philosophy/core-brief.md by npm run sync. Do not edit here. -->
+**Core rules in brief.** These apply even before you open `references/_shared/experience-core.md`.
+Read that file (the full rules and evidence levels) before a full review, repair, or build.
+
+- **Verdict before adjectives.** Do not write "clean," "modern," "great idea," or "looks good" until
+  an observation earns it. The user's enthusiasm is not evidence; test the proposal against the goal.
+- **Evidence levels on findings.** E1 rendered, E2 measured, E3 source, E4 documented,
+  E5 screenshot, E6 assumed. If files, a browser, or a terminal are available, look or measure before
+  claiming. Otherwise, name the checks you did not run.
+- **Composition is not alignment.** Empty space needs a stated job, and sparseness is never fixed
+  with filler (stats, tips, promos, decoration).
+- **Personality can come from the environment and causal product behavior.** A standard control
+  changes only if the change makes the task faster or more reliable.
+- **Every treatment has a job.** Every gradient, card, shadow, and animation needs one. No pattern
+  is wrong by category, so keep one that does a job.
+- **Count steps before and after.** If the software already knows an answer, do not ask for it.
+  Keep safeguards on money, deletion, and publishing. Automate mechanics, not judgment.
+- **Check real states, not the showcase:** empty, dense, long content, loading, error, a small
+  screen, the keyboard path.
+- **Route selectively.** Consider the relevant experience skills; activate another only when it
+  can resolve a material concern. No change and no handoff are valid outcomes.
+- **Render meaningful work when a runnable surface exists.** Inspect before and after, stress real
+  states, and say **NOT VERIFIED IN RENDERED OUTPUT** with the reason when rendering is skipped.
+- **Load depth conditionally.** A direction, composition, workflow, control, state, motion, or
+  anti-slop branch must load its required reference before recommendation or edit; unrelated work
+  must not load the whole library.
+- **A large specification is a bigger evidence base, not a bigger checklist.** Preserve exact
+  numbers, exceptions, and locked decisions; keep recommendations, examples, and deferred items
+  from becoming requirements; compress for reasoning, re-open the source for precision.
+<!-- core-brief:end -->
+
+## Use this when
+
+- The user reports a symptom without a diagnosis: "feels empty," "slow," "generic," "off," "flat,"
+  "confusing."
+- A task touches several experience concerns (a redesign, a new feature, a whole-screen review).
+- You are about to build or substantially change a user-facing surface.
+- The user asks for an experience audit of a product or area.
+
+## Do not use this when
+
+- The user explicitly asked to use all Experience Skills for a substantial product: use use-all-skills.
+- The problem is already scoped to one specialist ("the table overflows at 360px"). Use that skill.
+- The task is backend or infrastructure with no user-facing behavior.
+- The user asked for a narrow mechanical change ("rename this button to Save"). Just do it.
+
+## Mandatory conditional loading
+
+Before routing, load `references/diagnosis-and-routing.md`, `references/_shared/experience-routing.md`, and the shared operating contract. For each activated skill, read every reference its `Mandatory conditional loading` section requires before advice or edits; invoking the skill alone does not load those files. If a required file is unavailable, stop that branch, use only its documented fallback, and record the gap.
+
+When two or more material problem classes are confirmed, map each class to an owner and cover every independent concern; selective routing does not mean stopping at the first plausible specialist. Use a recipe only when its dependencies match. Re-evaluate conditional dependencies after each material finding or change, and pass the completed handoff contract in the next specialist invocation. Stop the graph when all concerns are resolved or the next skill would address only low-impact polish. Keep the compact execution trace required by the shared contract.
+
+## Checkpoints
+
+Decision points, not advice. At each one, take the branch it names.
+
+1. **Before diagnosing:** have you observed the surface at the strongest evidence level available?
+   If a browser, simulator, or terminal is available and you have not used it → observe first.
+   If none is available → say so now and mark findings E3/E5/E6.
+2. **Is the input under specification pressure?** A long, imperfect, real-world spec needs
+   `references/_shared/specification-pressure.md`'s intake before diagnosis: separate hard
+   requirements from recommendations, examples, and deferred items; keep exact numbers and
+   exceptions; do not treat a stated brand or visual direction as open. A large source does not
+   imply a large specialist graph. "Review this UI," a single screenshot, or a named symptom on one
+   surface is the opposite case: observe, diagnose, recommend or repair, stop — that file does not
+   apply.
+3. **Before naming a problem:** can you point to an observation (a measurement, an element, a step
+   count)? No → it is a hypothesis; label it and go find the evidence.
+4. **After ranking problems and, for BUILD or quality-focused REPAIR, clear upside:** activate the smallest specialist set that covers every confirmed material concern (usually at most three initially); a fourth needs a product-specific reason. Do not collapse independent identity and composition concerns into one specialist merely because either could make a visible change. A technically working but materially generic or underdeveloped area can justify creation work when direction is open. A strong, resolved area argues against activation. A no-change result is valid after this assessment. In REVIEW or VERIFY, report or verify rather than redesign. When activating, use the agent's skill mechanism. The specialists are separate skills. The routing table only names them; it does
+   not contain their method. If a specialist is not installed, use its fallback in
+   `references/diagnosis-and-routing.md` and say so. Answering from this file alone is a routing
+   failure.
+5. **If the user proposed a solution** ("add animations," "make the boxes fancier"): evaluate it
+   against the goal before implementing it (critical-review method). If it fails the goal, say so
+   and propose the alternative before doing any work.
+6. **Before presenting any result:** run `references/final-gate.md`, starting with the rendered
+   result: a material visual failure still present is a FAIL whatever else passed. Any FAIL you did not fix is
+   listed; any unchecked item is NOT VERIFIED. Then reread your summary against
+   `references/_shared/model-instincts.md` and delete praise you did not earn.
+7. **Before routing:** name the problem class from the table in `references/diagnosis-and-routing.md` and its observable signal. A symptom without a confirmed signal stays a hypothesis.
+8. **When two or more specialists apply:** check each concern against the conditional edges in `references/diagnosis-and-routing.md`; use `references/recipes.md` only when its dependencies fit. Write the filled handoff immediately before activation and include it in the request when supported, otherwise as the preceding task note. No handoff is needed once the concern is resolved; record why the graph stops.
+
+9. **Before visual direction or final review:** does the core instrument have spatial authority and continuity across focus, secondary surfaces, and mobile? If not, route the confirmed failure. If the primary job and loop are clear and another reference will not change the next decision, implement and verify.
+
+## Workflow
+
+```
+UNDERSTAND → OBSERVE → CLASSIFY → LOAD DEPTH → CHANGE/ADVISE → RENDER/VERIFY → CRITIQUE → FINALIZE
+```
+
+1. **Understand.** Name the primary job, repeated loop, core instrument, supporting surfaces, and protected invariants before visual selection. If the input is a long or contradictory specification, run `references/_shared/specification-pressure.md`'s intake first and derive these from its operating brief, not a raw re-read. Then inspect product, audience, devices, frequency of use; the surface and its archetype
+   (`references/_shared/page-archetypes.md`); the goal; the mode; product maturity
+   (`references/_shared/product-maturity.md`); constraints. Infer from the repository first; ask only
+   what would change your approach. For games, CLIs, kiosks, live control, native apps, or public
+   services, load `references/product-archetypes.md`.
+2. **Observe.** Collect evidence per `references/_shared/evidence-standard.md`. Record observations
+   separately from interpretations.
+3. **Classify.** Load `references/diagnosis-and-routing.md`. Map symptoms to problem classes using
+   the codes in `references/_shared/visual-problems.md` and `references/_shared/workflow-friction.md`.
+   Rank by user impact: blocked task > slowed frequent task > damaged trust or comprehension >
+   weak identity > polish.
+4. **Load depth.** From the same reference, activate specialists only when their method can change a material decision; prioritize product mechanics before aesthetics. If a specialist is not installed, use its fallback method listed there
+   and tell the user the full skill exists.
+5. **Change or advise.** REVIEW: write findings. REPAIR/BUILD: follow `references/execution-loop.md`.
+6. **Render and verify.** For meaningful runnable work, follow the required loop in
+   `references/_shared/experience-operating-contract.md`: primary size, one small and one short
+   size, a sparse and a dense state, and the keyboard path. If you cannot render, write **NOT
+   VERIFIED IN RENDERED OUTPUT** and list the exact reason and checks for the user.
+7. **Critique.** Checkpoint 6.
+8. **Finalize.** Report changes, evidence levels, gate results, unverified items, next step.
+
+## Output (REVIEW and VERIFY)
+
+```
+## Diagnosis
+Surface: <name> · Archetype: <archetype> · Mode: REVIEW · Evidence: <highest level used>
+
+## Findings (ranked by user impact)
+1. <code> <title> [E-level]
+   Observed: ...
+   Why it matters: ...
+   Recommendation: ...  (tradeoff: ...)
+
+## What works (only if earned, with evidence)
+## Not verified
+## Suggested order of work
+```
+
+For overall scoring, use verdict words from `references/_shared/experience-rubric.md`, not numbers.
+
+## Product archetype and evidence
+
+Classify the whole product with `references/_shared/product-archetypes.md` (it sets density, identity
+intensity, motion, and empty-state defaults) and each surface with `references/_shared/page-archetypes.md`.
+When the product is not a web app, `references/product-archetypes.md` explains how the advice changes.
+
+## Failure modes
+
+- Loading many references and producing a generic essay.
+- Treating a symptom as a diagnosis ("it needs more color").
+- Recommending a trend (glass, bento, dark mode) instead of fixing the named problem.
+- Solving emptiness with filler, or clutter with emptiness.
+- Declaring success from source code alone.
+- Implementing the user's proposed fix without checking it serves their goal.
+
+## Completion criteria
+
+- Problems are named with shared codes, evidence-labeled, and ranked.
+- Only needed specialists were applied, in a stated order.
+- Changes were rendered and checked in more than one state and size, or the gap is stated.
+- Required conditional references were read and their required outputs (selection, composition,
+  counts, state matrix, or anti-slop alternatives) are present, or explicitly marked not verified.
+- When a material concern remains, its handoff carries the observation, consequence, uncertainty, and previous decision; otherwise no handoff is required.
+- The final gate was run and reported honestly.
+- The user knows what changed, what is verified, and the next step.
+
+## References
+
+- `references/diagnosis-and-routing.md` — symptoms → problem classes → specialists; ordering; fallbacks
+- `references/product-archetypes.md` — how product type changes the advice
+- `references/execution-loop.md` — the build/repair loop
+- `references/final-gate.md` — the gate before presenting
+- `references/recipes.md` — named multi-specialist graphs and handoff contracts
+- `references/_shared/` — generated copies: `experience-core.md`, `evidence-standard.md`,
+  `experience-operating-contract.md`,
+  `page-archetypes.md`, `product-archetypes.md`, `product-maturity.md`, `visual-problems.md`,
+  `workflow-friction.md`, `experience-rubric.md`, `model-instincts.md`,
+  `specification-pressure.md` — long or contradictory specification intake, kept out of the load
+  path for a normal-sized request
