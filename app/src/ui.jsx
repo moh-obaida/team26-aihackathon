@@ -1,7 +1,7 @@
 import { createContext, Fragment, useCallback, useContext, useEffect, useId, useRef, useState } from 'react';
 import { api } from './api.js';
 import { useI18n } from './i18n.js';
-import { Icon, Seal, CATEGORY_ICON } from './icons.jsx';
+import { Icon, Seal, Skyline, CATEGORY_ICON, CATEGORY_HUE } from './icons.jsx';
 import { Link } from './router.jsx';
 
 // ---------- contexts ----------
@@ -115,6 +115,27 @@ export function PageHeader({ title, sub, action, backTo }) {
   );
 }
 
+/** Time-of-day greeting in UAE time. */
+export function useGreeting() {
+  const { t, lang } = useI18n();
+  const h = Number(new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Asia/Dubai' }).format(new Date()));
+  return t(h < 12 ? 'home.greet.morning' : h < 18 ? 'home.greet.afternoon' : 'home.greet.evening') + (lang === 'ar' ? '،' : ',');
+}
+
+/** Top of a home screen: the skyline sits behind the first words, so the screen opens with a sense of place. */
+export function Hero({ eyebrow, title, sub, compact }) {
+  return (
+    <header className={`hero ${compact ? 'compact' : ''}`}>
+      <Skyline />
+      <div className="hero-text">
+        {eyebrow && <p className="hero-eyebrow">{eyebrow}</p>}
+        <h1><bdi>{title}</bdi></h1>
+        {sub && <p className="hero-sub">{sub}</p>}
+      </div>
+    </header>
+  );
+}
+
 export function Section({ title, action, children, id }) {
   const hid = useId();
   return (
@@ -128,13 +149,14 @@ export function Section({ title, action, children, id }) {
   );
 }
 
-export function Tabs({ items, current, label }) {
+export function Tabs({ items, current, label, tiles }) {
   return (
-    <nav className="tabs" aria-label={label}>
+    <nav className={tiles ? 'queue-tiles' : 'tabs'} aria-label={label}>
       {items.map((i) => (
         <Link key={i.to} to={i.to} aria-current={current === i.to ? 'page' : undefined}>
-          {i.label}
-          {i.count ? <span className="count">{i.count}</span> : null}
+          {tiles && i.icon && <Icon name={i.icon} size={22} />}
+          <span className="tab-label">{i.label}</span>
+          {i.count ? <span className="count" aria-label={String(i.count)}>{i.count}</span> : null}
         </Link>
       ))}
     </nav>
@@ -323,33 +345,40 @@ export function useFmt() {
   return fmt;
 }
 
-export function OpportunityCard({ o, to, showStatus, flat }) {
+export function OpportunityCard({ o, to, showStatus, flat, hostView }) {
   const { t, lang } = useI18n();
   const fmt = useFmt();
   const d = new Date(o.date + 'T12:00:00Z');
+  const part = (opts) => new Intl.DateTimeFormat(fmt.locale, { ...opts, timeZone: 'UTC' }).format(d);
+  const full = o.status === 'full' || o.spots_left === 0;
   return (
-    <Link to={to} className={`opp ${flat ? 'flat' : ''}`}>
+    <Link to={to} className={`opp ${flat ? 'flat' : ''}`} style={{ '--cat': CATEGORY_HUE[o.category] || CATEGORY_HUE.other }}>
       <div className="datetab" aria-hidden="true">
+        <div className="w">{part({ weekday: 'short' })}</div>
         <div className="d num">{fmt.num(d.getUTCDate())}</div>
-        <div className="m">{new Intl.DateTimeFormat(fmt.locale, { month: 'short', timeZone: 'UTC' }).format(d)}</div>
+        <div className="m">{part({ month: 'short' })}</div>
       </div>
-      <div className="grow">
+      <div className="opp-body">
+        <div className="opp-cat"><Icon name={CATEGORY_ICON[o.category] || 'star'} size={15} />{t('cat.' + o.category)}</div>
         <h3><bdi>{o.title}</bdi></h3>
         <div className="meta">
-          <span><Icon name="calendar" size={15} />{fmt.date(o.date)}{fmt.sep}{fmt.time(o.start_time)}–{fmt.time(o.end_time)}</span>
-          <span><Icon name="pin" size={15} /><bdi>{o.general_location}</bdi></span>
-          {o.community && <span><Icon name="building" size={15} />{lang === 'ar' ? o.community.name_ar : o.community.name}</span>}
+          <span><Icon name="clock" size={15} /><span className="sr-only">{fmt.date(o.date)}{fmt.sep}</span>{fmt.time(o.start_time)}–{fmt.time(o.end_time)}</span>
+          <span><Icon name="pin" size={15} /><span><bdi>{o.general_location}</bdi>{o.community && <span className="muted"> · {lang === 'ar' ? o.community.name_ar : o.community.name}</span>}</span></span>
         </div>
-        <div className="row-wrap">
-          <span className="badge plain teal"><Icon name={CATEGORY_ICON[o.category] || 'star'} size={13} />{t('cat.' + o.category)}</span>
-          <span className="badge plain">{t('common.age', { n: fmt.num(o.min_age) })}</span>
-          {o.status === 'full' || o.spots_left === 0
-            ? <span className="badge info">{t('common.noSpots')}</span>
-            : o.spots_left === 1 ? <span className="badge wait">{t('common.spotsOne')}</span>
-              : <span className="badge plain">{t('common.spots', { n: fmt.num(o.spots_left) })}</span>}
-          {o.my_application && <StatusBadge kind="app" status={o.my_application} />}
-          {showStatus && <StatusBadge kind="opp" status={o.status} />}
-          {o.eligible === false && <span className="badge bad">{t('student.tooYoung', { n: fmt.num(o.min_age) })}</span>}
+        <div className="opp-foot">
+          <div className="row-wrap">
+            {hostView
+              ? <span className="badge plain">{t('resident.volunteersOf', { a: fmt.num(o.accepted_count ?? 0), b: fmt.num(o.capacity) })}</span>
+              : full
+                ? <span className="badge info">{t('common.noSpots')}</span>
+                : o.spots_left === 1 ? <span className="badge wait">{t('common.spotsOne')}</span>
+                  : <span className="badge plain">{t('common.spots', { n: fmt.num(o.spots_left) })}</span>}
+            <span className="badge plain">{t('common.age', { n: fmt.num(o.min_age) })}</span>
+            {o.my_application && <StatusBadge kind="app" status={o.my_application} />}
+            {showStatus && <StatusBadge kind="opp" status={o.status} />}
+            {o.eligible === false && <span className="badge bad">{t('student.tooYoung', { n: fmt.num(o.min_age) })}</span>}
+          </div>
+          <Icon name="arrow" size={18} className="go" />
         </div>
       </div>
     </Link>
@@ -457,21 +486,31 @@ export function ParticipationRecord({ r }) {
   );
 }
 
-export function HoursSummary({ verified, pending, to }) {
+export function HoursSummary({ verified, pending, to, waitingHost = 0 }) {
   const { t } = useI18n();
   const fmt = useFmt();
+  const logged = verified + pending;
+  const share = logged > 0 ? Math.round((verified / logged) * 100) : 0;
   return (
-    <div className="seal-hero">
-      <Seal size={64} />
-      <div>
-        <div className="big">{fmt.num(verified)}</div>
-        <div className="lbl">{t('home.hoursVerified')}</div>
-        {pending > 0
-          ? <div className="pend"><Icon name="hourglass" size={14} />{t('home.hoursPending', { n: fmt.num(pending) })}</div>
-          : <div className="pend" style={{ color: '#d6ebe6' }}>{t('home.hoursNone')}</div>}
-        {to && <div style={{ marginTop: 8 }}><Link to={to} className="xs">{t('hours.records')}</Link></div>}
+    <section className="hours-card" aria-label={t('home.hoursVerified')}>
+      <div className="hours-main">
+        <Seal size={54} />
+        <div className="grow">
+          <div className="hours-figure"><span className="big num">{fmt.num(verified)}</span><span className="lbl">{t('home.hoursVerified')}</span></div>
+          {logged > 0 && (
+            <div className="hours-bar" role="img" aria-label={t('home.hoursPending', { n: fmt.num(pending) })}>
+              <span style={{ inlineSize: `${share}%` }} />
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+      <ul className="hours-notes">
+        {pending > 0 && <li><Icon name="hourglass" size={15} />{t('home.hoursPending', { n: fmt.num(pending) })}</li>}
+        {waitingHost > 0 && <li><Icon name="clock" size={15} />{t('home.hoursWithHost')} · {t('student.recordsCount', { n: fmt.num(waitingHost) })}</li>}
+        {pending === 0 && waitingHost === 0 && <li className="muted">{t('home.hoursNone')}</li>}
+      </ul>
+      {to && <Link to={to} className="hours-link">{t('home.hoursDetails')}<Icon name="chev" size={16} className="chev" /></Link>}
+    </section>
   );
 }
 
@@ -521,29 +560,34 @@ export function ReviewQueueItem({ to, title, sub, badge }) {
   );
 }
 
-export function ConsentCard({ c, children }) {
+export function ConsentCard({ c, children, full }) {
   const { t, lang } = useI18n();
   const fmt = useFmt();
   const o = c.opportunity;
+  const name = c.student.display_name;
   return (
-    <article className="panel stack">
-      <div className="row between" style={{ alignItems: 'flex-start' }}>
+    <article className="consent" style={{ '--cat': CATEGORY_HUE[o.category] || CATEGORY_HUE.other }}>
+      <div className="consent-who">
+        <span className="initial" aria-hidden="true">{[...name][0]}</span>
         <div className="grow">
-          <p className="small muted">{t('guardian.consentFor', { student: c.student.display_name })}</p>
-          <h3><bdi>{o.title}</bdi></h3>
-          <p className="xs muted">{t('guardian.whoHosts', { name: o.host_name, community: lang === 'ar' ? o.community_ar : o.community })}</p>
+          <p className="who"><bdi>{t('guardian.joinLine', { student: name })}</bdi></p>
+          {c.student.age != null && <p className="xs muted">{t('guardian.studentAge', { n: fmt.num(c.student.age) })}</p>}
         </div>
-        <StatusBadge kind="consent" status={c.status} />
+        {c.status !== 'pending' && <StatusBadge kind="consent" status={c.status} />}
+      </div>
+      <div className="consent-act">
+        {o.category && <div className="opp-cat"><Icon name={CATEGORY_ICON[o.category] || 'star'} size={15} />{t('cat.' + o.category)}</div>}
+        <h3><bdi>{o.title}</bdi></h3>
+        <p className={`small ugc ${full ? '' : 'clamp'}`} dir="auto">{o.description}</p>
+        <p className="xs muted">{t('guardian.whoHosts', { name: o.host_name, community: lang === 'ar' ? o.community_ar : o.community })}</p>
       </div>
       <div className="facts">
-        <Fact icon="calendar" k={t('detail.when')} v={`${fmt.date(o.date, { weekday: 'long', day: 'numeric', month: 'long' })}${fmt.sep}${fmt.time(o.start_time)}–${fmt.time(o.end_time)}`} />
-        <Fact icon="hourglass" k={t('detail.duration')} v={t('common.hours', { n: fmt.num(o.duration_hours) })} />
+        <Fact icon="calendar" k={t('detail.when')} v={`${fmt.date(o.date, { weekday: 'long', day: 'numeric', month: 'long' })}${fmt.sep}${fmt.time(o.start_time)}–${fmt.time(o.end_time)} (${t('common.hours', { n: fmt.num(o.duration_hours) })})`} />
         <Fact icon="pin" k={t('detail.where')} v={o.general_location} ugc />
         <Fact icon="shieldCheck" k={t('detail.supervision')} v={o.supervision} ugc />
-        <Fact icon="info" k={t('detail.about')} v={o.description} ugc />
         {o.requirements && <Fact icon="doc" k={t('detail.requirements')} v={o.requirements} ugc />}
       </div>
-      {children}
+      {children && <div className="consent-actions">{children}</div>}
     </article>
   );
 }

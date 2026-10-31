@@ -4,8 +4,8 @@ import { useI18n } from '../i18n.js';
 import { Icon } from '../icons.jsx';
 import { Link } from '../router.jsx';
 import {
-  Button, ConfirmDialog, ConsentCard, EmptyState, FormField, Load, PageHeader, ReasonDialog, Section, StatusBadge,
-  useAction, useApi, useAuth, Meta,
+  Button, ConfirmDialog, ConsentCard, EmptyState, FormField, Hero, Load, PageHeader, ReasonDialog, Section, StatusBadge,
+  useAction, useApi, useAuth, useGreeting, Meta,
 } from '../ui.jsx';
 
 function LinkStudentForm({ onLinked }) {
@@ -69,10 +69,13 @@ function ConsentActions({ c, setDlg }) {
   const { t } = useI18n();
   if (c.status === 'pending') {
     return (
-      <div className="actions">
-        <Button variant="secondary" onClick={() => setDlg({ type: 'decline', c })}>{t('guardian.decline')}</Button>
-        <Button onClick={() => setDlg({ type: 'approve', c })}><Icon name="check" size={18} />{t('guardian.approve')}</Button>
-      </div>
+      <>
+        <div className="actions decision">
+          <Button variant="danger" onClick={() => setDlg({ type: 'decline', c })}><Icon name="x" size={18} />{t('guardian.decline')}</Button>
+          <Button onClick={() => setDlg({ type: 'approve', c })} aria-label={t('guardian.approve')}><Icon name="check" size={18} />{t('guardian.approveShort')}</Button>
+        </div>
+        <p className="xs muted consent-note"><bdi>{t('guardian.consentNote', { student: c.student.display_name })}</bdi></p>
+      </>
     );
   }
   if (c.status === 'approved' && ['under_review', 'accepted'].includes(c.application_status)) {
@@ -86,9 +89,10 @@ export function Home() {
   const { user } = useAuth();
   const q = useApi('/guardian/dashboard');
   const ca = useConsentActions(q.reload);
+  const greeting = useGreeting();
   return (
     <>
-      <PageHeader title={t('home.hello', { name: user.display_name })} />
+      <Hero eyebrow={greeting} title={user.display_name} />
       <Load q={q} rows={3}>
         {(d) => (
           <>
@@ -200,7 +204,7 @@ export function ConsentDetail({ params }) {
           return (
             <>
               <PageHeader backTo="/guardian/consents" title={t('guardian.decisionTitle')} />
-              <ConsentCard c={c}>
+              <ConsentCard c={c} full>
                 {c.decided_at && <p className="xs muted">{t('guardian.decidedOn', { date: fmt.dateTime(c.decided_at) })}</p>}
                 {c.reason && <p className="small" dir="auto">{t('verification.reason', { reason: c.reason })}</p>}
                 <ConsentActions c={c} setDlg={ca.setDlg} />

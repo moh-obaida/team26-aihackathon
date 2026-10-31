@@ -4,7 +4,7 @@ import { useI18n } from '../i18n.js';
 import { Icon } from '../icons.jsx';
 import { Link, useRouter } from '../router.jsx';
 import {
-  Button, EmptyState, Fact, FormField, Load, OpportunityCard, PageHeader, ReasonDialog, ReviewQueueItem, Section,
+  Button, EmptyState, Fact, FormField, Hero, Load, OpportunityCard, PageHeader, ReasonDialog, ReviewQueueItem, Section,
   StatusBadge, Tabs, useAction, useApi, VerificationTimeline, Meta, useToast,
 } from '../ui.jsx';
 
@@ -13,10 +13,10 @@ function ReviewTabs({ current, refresh }) {
   const o = useApi('/mod/overview', [current, refresh]); // refetch counts whenever the queue changes
   const c = o.data?.counts || {};
   return (
-    <Tabs label={t('nav.reviews')} current={current} items={[
-      { to: '/moderator/memberships', label: t('mod.memberships'), count: c.memberships },
-      { to: '/moderator/opportunities', label: t('mod.opportunities'), count: c.opportunities },
-      { to: '/moderator/hours', label: t('mod.hours'), count: c.hours },
+    <Tabs tiles label={t('nav.reviews')} current={current} items={[
+      { to: '/moderator/memberships', icon: 'users', label: t('mod.memberships'), count: c.memberships },
+      { to: '/moderator/opportunities', icon: 'list', label: t('mod.opportunities'), count: c.opportunities },
+      { to: '/moderator/hours', icon: 'clock', label: t('mod.hours'), count: c.hours },
     ]} />
   );
 }
@@ -47,7 +47,7 @@ export function Overview() {
   const q = useApi('/mod/overview');
   return (
     <>
-      <PageHeader title={t('mod.title')} sub={t('mod.overviewSub')} />
+      <Hero compact title={t('mod.title')} sub={t('mod.overviewSub')} />
       <Load q={q}>
         {(d) => (
           <>
@@ -86,7 +86,7 @@ export function Memberships() {
   const q = useApi('/mod/memberships');
   return (
     <>
-      <PageHeader title={t('nav.reviews')} />
+      <Hero compact title={t('nav.reviews')} sub={t('mod.reviewsSub')} />
       <ReviewTabs current="/moderator/memberships" refresh={q.data} />
       <Load q={q}>
         {(d) => (d.memberships.length === 0
@@ -171,7 +171,7 @@ export function Opportunities() {
   };
   return (
     <>
-      <PageHeader title={t('nav.reviews')} />
+      <Hero compact title={t('nav.reviews')} sub={t('mod.reviewsSub')} />
       <ReviewTabs current="/moderator/opportunities" refresh={q.data} />
       <div className="chips" role="group" aria-label={t('mod.opportunities')} style={{ marginBottom: 12 }}>
         <button type="button" className="chip" aria-pressed={scope === 'pending'} onClick={() => setScope('pending')}>{t('mod.pendingListings')}</button>
@@ -212,19 +212,30 @@ export function Hours() {
   const q = useApi('/mod/participation');
   return (
     <>
-      <PageHeader title={t('nav.reviews')} />
+      <Hero compact title={t('nav.reviews')} sub={t('mod.reviewsSub')} />
       <ReviewTabs current="/moderator/hours" refresh={q.data} />
       <Load q={q}>
         {(d) => (d.records.length === 0
           ? <EmptyState icon="clock" title={t('mod.noItems')} body={t('mod.noItemsBody')} />
           : (
-            <div className="panel-flush"><ul className="list">
-              {d.records.map((r) => (
-                <ReviewQueueItem key={r.id} to={`/moderator/hours/${r.id}`} title={r.opportunity.title}
-                  sub={t('mod.hostConfirmed', { host: r.host_name, n: fmt.num(r.confirmed_hours), student: r.student_name })}
-                  badge={<StatusBadge kind="hours" status={r.status} />} />
-              ))}
-            </ul></div>
+            <Section title={`${t('mod.pendingHours')} (${fmt.num(d.records.length)})`}>
+              <div className="panel-flush"><ul className="list">
+                {d.records.map((r) => (
+                  <li key={r.id}>
+                    <Link to={`/moderator/hours/${r.id}`} className="list-row person-row">
+                      <span className="initial" aria-hidden="true">{[...r.student_name][0]}</span>
+                      <div className="grow">
+                        <div className="title"><bdi>{r.student_name}</bdi></div>
+                        <div className="sub"><bdi>{r.opportunity.title}</bdi></div>
+                        <div className="sub">{t('mod.confirmedBy', { host: r.host_name })}</div>
+                      </div>
+                      <span className="hours-pill num">{t('common.hours', { n: fmt.num(r.confirmed_hours) })}</span>
+                      <Icon name="chev" size={18} className="chev" />
+                    </Link>
+                  </li>
+                ))}
+              </ul></div>
+            </Section>
           ))}
       </Load>
     </>
@@ -247,9 +258,17 @@ export function HoursDetail({ params }) {
     <Load q={q}>
       {({ record: r, history }) => (
         <>
-          <PageHeader backTo="/moderator/hours" title={<bdi>{r.opportunity.title}</bdi>} sub={t('mod.hostConfirmed', { host: r.host_name, n: fmt.num(r.confirmed_hours ?? 0), student: r.student_name })} />
+          <PageHeader backTo="/moderator/hours" title={<bdi>{r.opportunity.title}</bdi>} />
           <div className="wide-2">
             <div className="panel stack">
+              <div className="who-row">
+                <span className="initial" aria-hidden="true">{[...r.student_name][0]}</span>
+                <div className="grow">
+                  <p className="who"><bdi>{r.student_name}</bdi></p>
+                  <p className="xs muted">{t('mod.confirmedBy', { host: r.host_name })}</p>
+                </div>
+                <span className="hours-pill big num">{t('common.hours', { n: fmt.num(r.confirmed_hours ?? 0) })}</span>
+              </div>
               <VerificationTimeline r={r} />
               <div className="facts">
                 <Fact icon="calendar" k={t('mod.scheduled')} v={`${fmt.date(r.scheduled.date)}${fmt.sep}${fmt.time(r.scheduled.start_time)}–${fmt.time(r.scheduled.end_time)} (${t('common.hours', { n: fmt.num(r.opportunity.duration_hours) })})`} />

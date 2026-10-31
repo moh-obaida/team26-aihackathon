@@ -260,10 +260,11 @@ function ShellInner({ path, navigate }) {
           </Link>
         )}
         <div className="grow" />
-        <button type="button" className="icon-btn lang-btn" onClick={() => setLang(lang === 'ar' ? 'en' : 'ar')} aria-label={t('lang.switchLabel')} lang={lang === 'ar' ? 'en' : 'ar'}>
-          {t('lang.switch')}
-        </button>
-        {user && (
+        <div className="lang-pill" role="group" aria-label={t('lang.switchLabel')}>
+          <button type="button" lang="en" aria-pressed={lang === 'en'} onClick={() => lang !== 'en' && setLang('en')}>EN</button>
+          <button type="button" lang="ar" aria-pressed={lang === 'ar'} onClick={() => lang !== 'ar' && setLang('ar')}>العربية</button>
+        </div>
+        {user && !nav.some(([to]) => /\/settings$/.test(to)) && (
           <Link to="/settings" className="icon-btn avatar-btn" aria-label={t('nav.settings')}>
             <Avatar user={user} size={32} />
           </Link>

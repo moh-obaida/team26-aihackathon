@@ -4,8 +4,8 @@ import { useI18n } from '../i18n.js';
 import { Icon } from '../icons.jsx';
 import { Link, useRouter } from '../router.jsx';
 import {
-  Button, ConfirmDialog, EmptyState, FormField, Load, OpportunityCard, PageHeader, Section, Sheet, StatusBadge,
-  useAction, useApi, useAuth, VerificationTimeline,
+  Button, ConfirmDialog, EmptyState, FormField, Hero, Load, OpportunityCard, PageHeader, Section, Sheet, StatusBadge,
+  useAction, useApi, useAuth, useGreeting, VerificationTimeline,
 } from '../ui.jsx';
 
 const CATS = ['cleanup', 'gardening', 'seniors', 'reading', 'pets', 'events', 'tutoring', 'other'];
@@ -14,39 +14,52 @@ const LIVE = ['pending_review', 'published', 'full', 'closed', 'draft'];
 export function Home() {
   const { t, lang, fmt } = useI18n();
   const { user } = useAuth();
+  const greeting = useGreeting();
   const q = useApi('/resident/dashboard');
   return (
     <Load q={q} rows={4}>
       {(d) => {
         const pending = d.memberships.find((m) => m.status === 'pending');
         const approved = d.memberships.filter((m) => m.status === 'approved');
+        const standing = d.verified
+          ? { cls: 'ok', icon: 'shieldCheck', title: t('resident.verifiedTitle'), sub: t('resident.statusVerified', { name: approved.map((m) => (lang === 'ar' ? m.name_ar : m.name)).join(t('common.listSep')) }) }
+          : pending
+            ? { cls: 'wait', icon: 'hourglass', title: t('resident.pendingVerification'), sub: t('resident.pendingVerificationBody') }
+            : { cls: 'todo', icon: 'shield', title: t('resident.notVerified'), sub: t('resident.notVerifiedBody') };
         let next = null;
-        if (!d.verified && !pending) next = { to: '/resident/verification', icon: 'shieldCheck', title: t('resident.notVerified'), sub: t('resident.notVerifiedBody') };
-        else if (!d.verified && pending) next = { to: '/resident/verification', icon: 'hourglass', title: t('resident.pendingVerification'), sub: t('resident.pendingVerificationBody') };
-        else if (d.awaiting_confirmation > 0) next = { to: '/resident/opportunities', icon: 'clock', title: t('resident.awaitingConfirm'), sub: t('resident.awaitingConfirmSub', { n: fmt.num(d.awaiting_confirmation) }) };
-        else if (d.pending_applicants > 0) next = { to: '/resident/opportunities', icon: 'users', title: t('resident.pendingApplicants'), sub: t('resident.pendingApplicantsSub', { n: fmt.num(d.pending_applicants) }) };
-        else if (d.active === 0) next = { to: '/resident/opportunities/new', icon: 'plus', title: t('resident.createRequest'), sub: t('resident.noRequestsBody') };
+        if (d.verified && d.active === 0) next = { to: '/resident/opportunities/new', icon: 'plus', title: t('resident.createRequest'), sub: t('resident.noRequestsBody') };
+        const tiles = [
+          { n: d.active, k: t('resident.active') },
+          { n: d.pending_applicants, k: t('resident.pendingApplicants'), hot: true },
+          { n: d.awaiting_confirmation, k: t('resident.awaitingConfirm'), hot: true },
+        ];
         return (
           <>
-            <PageHeader title={t('home.hello', { name: user.display_name })}
-              sub={approved.length ? t('resident.statusVerified', { name: approved.map((m) => (lang === 'ar' ? m.name_ar : m.name)).join(t('common.listSep')) }) : null} />
+            <Hero eyebrow={greeting} title={user.display_name} />
+            <Link to="/resident/verification" className={`standing ${standing.cls}`}>
+              <span className="standing-ic"><Icon name={standing.icon} size={24} /></span>
+              <span className="grow"><span className="standing-title">{standing.title}</span><span className="standing-sub">{standing.sub}</span></span>
+              <Icon name="chev" size={18} className="chev" />
+            </Link>
+            <div className="tile-row">
+              {tiles.map((x) => (
+                <Link key={x.k} className={`tile ${x.hot && x.n > 0 ? 'hot' : ''}`} to="/resident/opportunities">
+                  <span className="v num">{fmt.num(x.n)}</span>
+                  <span className="k">{x.k}</span>
+                </Link>
+              ))}
+            </div>
             {next && (
-              <Link to={next.to} className="next-action">
+              <Link to={next.to} className="next-action" style={{ marginTop: 16 }}>
                 <span className="ic"><Icon name={next.icon} /></span>
-                <span className="grow"><span className="xs" style={{ fontWeight: 600 }}>{t('resident.nextAction')}</span><br /><span className="title">{next.title}</span><br /><span className="sub">{next.sub}</span></span>
+                <span className="grow"><span className="title">{next.title}</span><br /><span className="sub">{next.sub}</span></span>
                 <Icon name="chev" className="chev" />
               </Link>
             )}
-            <div className="stat-grid four" style={{ marginTop: 16 }}>
-              <Link className="stat" to="/resident/opportunities"><div className="v">{fmt.num(d.active)}</div><div className="k">{t('resident.active')}</div></Link>
-              <Link className="stat" to="/resident/opportunities"><div className="v">{fmt.num(d.pending_applicants)}</div><div className="k">{t('resident.pendingApplicants')}</div></Link>
-              <Link className="stat" to="/resident/opportunities"><div className="v">{fmt.num(d.accepted_volunteers)}</div><div className="k">{t('resident.acceptedVolunteers')}</div></Link>
-              <Link className="stat" to="/resident/opportunities"><div className="v">{fmt.num(d.awaiting_confirmation)}</div><div className="k">{t('resident.awaitingConfirm')}</div></Link>
-            </div>
-            <Section title={t('resident.upcoming')} action={d.verified ? <Link to="/resident/opportunities/new" className="btn btn-primary btn-sm"><Icon name="plus" size={16} />{t('resident.newRequest')}</Link> : null}>
+            <Section title={t('resident.upcoming')} action={d.upcoming.length > 0 ? <Link to="/resident/opportunities">{t('common.viewAll')}</Link> : null}>
               {d.upcoming.length === 0
                 ? <p className="muted small">{d.verified ? t('resident.noUpcoming') : t('resident.notVerifiedBody')}</p>
-                : <div className="cards">{d.upcoming.map((o) => <OpportunityCard key={o.id} o={o} to={`/resident/opportunities/${o.id}/applicants`} showStatus />)}</div>}
+                : <div className="cards">{d.upcoming.map((o) => <OpportunityCard key={o.id} o={o} to={`/resident/opportunities/${o.id}/applicants`} showStatus hostView />)}</div>}
             </Section>
           </>
         );
@@ -112,7 +125,7 @@ export function Opportunities() {
             <div className="cards" role="tabpanel">
               {list.map((o) => (
                 <div key={o.id} className="stack" style={{ gap: 6 }}>
-                  <OpportunityCard o={o} to={`/resident/opportunities/${o.id}/applicants`} showStatus />
+                  <OpportunityCard o={o} to={`/resident/opportunities/${o.id}/applicants`} showStatus hostView />
                   {(o.pending_applications > 0 || o.awaiting_confirmation > 0) && (
                     <div className="row-wrap" style={{ paddingInline: 8 }}>
                       {o.pending_applications > 0 && <Link to={`/resident/opportunities/${o.id}/applicants`} className="badge wait" style={{ textDecoration: 'none' }}>{t('requests.toReview', { n: o.pending_applications })}</Link>}

@@ -44,8 +44,9 @@ const P = {
   lock: 'M6 10.5h12v10H6zM8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5',
   filter: 'M4 5.5h16l-6 7v6l-4 2v-8z',
   chart: 'M4.5 20h15M7 16.5V11M12 16.5V6.5M17 16.5V13.5',
+  arrow: 'M5 12h14M13.5 6.5 19 12l-5.5 5.5',
 };
-const MIRRORED = new Set(['back', 'chev', 'logout']);
+const MIRRORED = new Set(['back', 'chev', 'logout', 'arrow']);
 
 export function Icon({ name, size = 22, label, className = '' }) {
   const d = P[name];
@@ -73,3 +74,36 @@ export function Seal({ size = 56, label }) {
 }
 
 export const CATEGORY_ICON = { cleanup: 'broom', gardening: 'leaf', seniors: 'heart', reading: 'book', pets: 'paw', events: 'star', tutoring: 'doc', other: 'star' };
+
+// Category colour: one hue per kind of activity, taken from the logo's range (plus sand), so a list can be scanned by type.
+export const CATEGORY_HUE = { cleanup: '#0b7a7d', gardening: '#167a42', seniors: '#a4560a', reading: '#0b4f63', pets: '#7a5c22', events: '#4a7d14', tutoring: '#12627a', other: '#4e6a72' };
+
+// Dubai-style skyline in the logo's own language (a tapered tower among low blocks, one palm at the edge).
+// Decorative only; colours come from CSS variables so dark mode can retune it.
+export function Skyline({ className = '' }) {
+  const leaf = 'M0 0Q15 -16 38 -8Q17 -6 0 0Z';
+  return (
+    <svg className={`skyline ${className}`} viewBox="0 0 350 112" aria-hidden="true" focusable="false">
+      <g className="sky-back">
+        <rect x="84" y="76" width="20" height="36" />
+        <polygon points="104,112 104,50 126,40 126,112" />
+        <rect x="128" y="68" width="18" height="44" />
+        <path d="M178 112V52h8v-8h8v8h8v60z" />
+        <rect x="202" y="70" width="22" height="42" />
+        <rect x="268" y="62" width="24" height="50" /><rect x="292" y="80" width="20" height="32" />
+        <rect x="156.500" y="30" width="1.600" height="22" />
+      </g>
+      <g className="sky-mid">
+        <rect x="150" y="82" width="22" height="30" /><rect x="170" y="94" width="14" height="18" />
+        <path d="M236 112 L237.400 80 L239.200 80 L240.200 56 L241.600 56 L242.200 28 L242.900 0 L243.600 28 L244.200 56 L245.600 56 L246.600 80 L248.400 80 L249.800 112 Z" />
+        <polygon points="252,112 252,84 270,76 270,112" />
+      </g>
+      <g className="sky-palm">
+        <path d="M322 112 C321 98 319 88 315 76 L318 75 C323 87 326 98 327 112 Z" />
+        <g transform="translate(316.500 76) scale(0.78)">
+          {[-170, -135, -100, -62, -25, 12, 45].map((a) => <path key={a} d={leaf} transform={`rotate(${a})`} />)}
+        </g>
+      </g>
+    </svg>
+  );
+}

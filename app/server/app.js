@@ -769,7 +769,7 @@ export function createApp({ dbPath = ':memory:', demo = false, secureCookies = f
       application_status: a.status,
       student: { id: c.student_id, display_name: s.display_name, age: s.age },
       opportunity: {
-        id: o.id, title: o.title, description: o.description, general_location: o.general_location,
+        id: o.id, title: o.title, description: o.description, category: o.category, general_location: o.general_location,
         date: o.date, start_time: o.start_time, end_time: o.end_time, duration_hours: o.duration_hours,
         supervision: o.supervision, requirements: o.requirements, accessibility: o.accessibility, status: o.status,
         community: communityOf(o.community_id)?.name, community_ar: communityOf(o.community_id)?.name_ar, host_name: q1('SELECT display_name FROM users WHERE id=?', o.resident_id).display_name,

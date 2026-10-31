@@ -4,20 +4,25 @@ import { useI18n } from '../i18n.js';
 import { Icon } from '../icons.jsx';
 import { Link, useRouter } from '../router.jsx';
 import {
-  ApplicationTimeline, Button, ConfirmDialog, EmptyState, Fact, FormField, HoursSummary, Load, NotificationItem,
-  OpportunityCard, PageHeader, ParticipationRecord, SearchField, Section, Sheet, StatusBadge, useAction, useApi, useAuth,
+  ApplicationTimeline, Button, ConfirmDialog, EmptyState, Fact, FormField, Hero, HoursSummary, Load,
+  OpportunityCard, PageHeader, ParticipationRecord, SearchField, Section, Sheet, StatusBadge, useAction, useApi, useAuth, useGreeting,
   VerificationTimeline, Meta,
 } from '../ui.jsx';
 import { CategoryChips } from './public.jsx';
 
 const ACTIVE = ['submitted', 'pending_guardian', 'under_review', 'accepted'];
 
-function NextRow({ to, icon, title, sub }) {
+function ApplicationRow({ a }) {
+  const { fmt, lang } = useI18n();
+  const o = a.opportunity;
   return (
     <li>
-      <Link to={to} className="list-row">
-        <span aria-hidden="true" style={{ color: 'var(--saffron-ink)' }}><Icon name={icon} /></span>
-        <div className="grow"><div className="title">{title}</div><div className="sub">{sub}</div></div>
+      <Link to={`/student/applications/${a.id}`} className="list-row">
+        <div className="grow">
+          <div className="title"><bdi>{o.title}</bdi></div>
+          <Meta parts={[fmt.date(o.date), o.community ? (lang === 'ar' ? o.community.name_ar : o.community.name) : null]} />
+        </div>
+        <StatusBadge kind="app" status={a.status} />
         <Icon name="chev" size={18} className="chev" />
       </Link>
     </li>
@@ -27,20 +32,21 @@ function NextRow({ to, icon, title, sub }) {
 export function Home() {
   const { t, fmt } = useI18n();
   const { user } = useAuth();
+  const greeting = useGreeting();
   const q = useApi('/student/dashboard');
-  const notifs = useApi('/notifications');
+  const open = useApi('/opportunities?eligible=1&available=1');
   return (
     <Load q={q} rows={4}>
       {(d) => {
         const approved = d.memberships.some((m) => m.status === 'approved');
-        const needs = [
-          ...d.awaiting_guardian.map((a) => ({ to: `/student/applications/${a.id}`, icon: 'shieldCheck', title: a.opportunity.title, sub: t('home.awaitGuardian') })),
-          ...d.under_review.map((a) => ({ to: `/student/applications/${a.id}`, icon: 'hourglass', title: a.opportunity.title, sub: t('home.awaitHost') })),
-        ];
+        const [next, ...later] = d.upcoming;
+        const inProgress = [...d.awaiting_guardian, ...d.under_review];
+        const suggestions = (open.data?.opportunities || []).filter((o) => !o.my_application).slice(0, 3);
         return (
           <>
-            <PageHeader title={t('home.hello', { name: user.display_name })} />
-            <HoursSummary verified={d.verified_hours} pending={d.pending_hours} to="/student/hours" />
+            <Hero eyebrow={greeting} title={user.display_name}
+              sub={next ? t('home.subNext', { date: fmt.date(next.opportunity.date) }) : t('home.subNone')} />
+            <HoursSummary verified={d.verified_hours} pending={d.pending_hours} waitingHost={d.awaiting_resident} to="/student/hours" />
             {(!approved || d.guardians === 0) && (
               <div className="stack" style={{ marginTop: 16 }}>
                 {!approved && (
@@ -59,28 +65,26 @@ export function Home() {
                 )}
               </div>
             )}
-            <Section title={t('home.needsYou')}>
-              {needs.length === 0 && d.awaiting_resident === 0
-                ? <p className="muted small">{t('home.nothingNeeded')}</p>
-                : (
-                  <div className="panel-flush"><ul className="list">
-                    {needs.map((n) => <NextRow key={n.to} {...n} />)}
-                    {d.awaiting_resident > 0 && <NextRow to="/student/hours" icon="clock" title={t('home.awaitHostConfirm')} sub={t('student.recordsCount', { n: fmt.num(d.awaiting_resident) })} />}
-                  </ul></div>
-                )}
-            </Section>
-            <Section title={t('home.upcoming')} action={<Link to="/student/activities" className="small">{t('common.viewAll')}</Link>}>
+            <Section title={t('home.upcoming')} action={d.upcoming.length > 0 ? <Link to="/student/activities">{t('common.viewAll')}</Link> : null}>
               {d.upcoming.length === 0
-                ? <EmptyState icon="calendar" title={t('home.noUpcomingTitle')} body={t('home.noUpcoming')} action={approved ? <Link className="btn btn-primary" to="/student/discover">{t('home.findActivities')}</Link> : null} />
-                : <div className="cards">{d.upcoming.map((a) => <OpportunityCard key={a.id} o={a.opportunity} to={`/student/applications/${a.id}`} />)}</div>}
+                ? (
+                  <div className="panel quiet-empty">
+                    <p className="small muted grow">{t('home.noUpcoming')}</p>
+                    {approved && <Link className="btn btn-primary btn-sm" to="/student/discover">{t('home.findActivities')}</Link>}
+                  </div>
+                )
+                : <div className="cards">{[next, ...later.slice(0, 1)].map((a) => <OpportunityCard key={a.id} o={a.opportunity} to={`/student/applications/${a.id}`} />)}</div>}
             </Section>
-            <Section title={t('home.recent')} action={<Link to="/notifications" className="small">{t('common.viewAll')}</Link>}>
-              <Load q={notifs} rows={1}>
-                {(n) => n.notifications.length === 0
-                  ? <p className="muted small">{t('notif.emptyBody')}</p>
-                  : <div className="panel-flush"><ul className="list">{n.notifications.slice(0, 3).map((x) => <li key={x.id}><NotificationItem n={x} /></li>)}</ul></div>}
-              </Load>
-            </Section>
+            {inProgress.length > 0 && (
+              <Section title={t('home.myApplications')} action={<Link to="/student/applications">{t('common.viewAll')}</Link>}>
+                <div className="panel-flush"><ul className="list">{inProgress.map((a) => <ApplicationRow key={a.id} a={a} />)}</ul></div>
+              </Section>
+            )}
+            {approved && suggestions.length > 0 && (
+              <Section title={t('home.openForYou')} action={<Link to="/student/discover">{t('common.viewAll')}</Link>}>
+                <div className="cards">{suggestions.map((o) => <OpportunityCard key={o.id} o={o} to={`/opportunities/${o.id}`} />)}</div>
+              </Section>
+            )}
           </>
         );
       }}
@@ -114,7 +118,7 @@ export function Discover() {
 
   return (
     <>
-      <PageHeader title={t('student.discover')} />
+      <Hero compact title={t('student.discover')} sub={t('student.discoverSub')} />
       <div className="stack">
         <div className="row">
           <div className="grow"><SearchField value={q} onChange={setQ} placeholder={t('student.searchPlaceholder')} /></div>
@@ -123,6 +127,16 @@ export function Discover() {
           </Button>
         </div>
         <CategoryChips value={f.category} onChange={(c) => setF({ ...f, category: c })} />
+        {myCommunities.length > 1 && (
+          <div className="chips" role="group" aria-label={t('student.community')}>
+            <button type="button" className="chip chip-quiet" aria-pressed={f.community_id === ''} onClick={() => setF({ ...f, community_id: '' })}>{t('common.allCommunities')}</button>
+            {myCommunities.map((c) => (
+              <button key={c.id} type="button" className="chip chip-quiet" aria-pressed={f.community_id === c.id} onClick={() => setF({ ...f, community_id: f.community_id === c.id ? '' : c.id })}>
+                <Icon name="building" size={15} />{lang === 'ar' ? c.name_ar : c.name}
+              </button>
+            ))}
+          </div>
+        )}
         <Load q={data}>
           {(d) => {
             if (d.member_communities === 0) {
