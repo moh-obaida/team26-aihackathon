@@ -42,6 +42,32 @@ Specialists live in `readyvibe-skills/skills/<group>/<name>/SKILL.md`.
 - Groups: `accessibility`, `admin`, `commerce`, `compliance`, `discoverability`,
   `internationalization`, `quality`, `security`.
 
+## Running the app locally (Base44 sandbox)
+
+The app lives in `app/` and runs from source with live reload via `docker-compose.base44.yml`:
+
+```bash
+docker compose -f docker-compose.base44.yml up -d --build   # then http://localhost:3000
+```
+
+- `web` is the Vite dev server (host port 3000) and proxies `/api` to `http://api:8787`;
+  the proxy target comes from `API_PROXY_TARGET` (defaults to `http://localhost:8787`).
+- `api` runs `node --watch-path=/app/server server/index.js`; Node **24** is required because the
+  server uses the built-in `node:sqlite` (Node 22 needs a flag, which `app/package.json` ignores).
+- `deps` is a one-shot `npm ci` service: both app services wait for it so they never install concurrently.
+- `DEMO=1` seeds the fictional demo data into the empty database on first boot and lists the demo
+  accounts (password `Demo#2026`) under "demo accounts" on the sign-in screen. The SQLite file lives on
+  the `api-data` volume at `/data/team26.db`; `docker compose down -v` resets it.
+- Tests run inside the containers, e.g.
+  `docker compose -f docker-compose.base44.yml exec -T api npm test`.
+
+Prefer this over `app/Dockerfile`, which builds a production image and freezes the source.
+
+Split hosting (frontend on Vercel, API in the container) is documented in `app/DEPLOY.md` §1b.
+The client reads `VITE_API_BASE` at build time (`app/src/api.js`); the server answers CORS only for
+`ALLOWED_ORIGINS` and switches the session cookie to `SameSite=None; Secure` when `COOKIE_SAMESITE=none`.
+Before a split deploy, run the suite: `npm test` (now `node --test test/*.test.js`, which Node 24 requires).
+
 ## Rules
 
 - The two imported folders are unmodified copies of their source repos. Their own `AGENTS.md`, tests and

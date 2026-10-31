@@ -12,7 +12,7 @@
     "seed": "node server/seed-cli.js",
     "build": "vite build",
     "start": "DEMO=1 node server/index.js",
-    "test": "node --test test/",
+    "test": "node --test test/*.test.js",
     "demo:check": "node scripts/demo-check.mjs"
   },
   "dependencies": {

@@ -1,0 +1,93 @@
+# Local development stack for Jeran (Team 26 UAE community volunteering).
+#
+# Everything runs from the cloned source in ./app with live reload:
+#   web  — Vite dev server (host port 3000), proxies /api to the API service
+#   api  — Node HTTP server + SQLite (node:sqlite, needs Node 24), watches server/
+#   deps — one-shot `npm ci` so web and api never install concurrently
+#
+#   docker compose -f docker-compose.base44.yml up -d --build
+#
+# DEMO=1 seeds the fictional demo data into the empty database and lists the demo
+# accounts on the sign-in screen. Cookies stay non-Secure here because the sandbox
+# preview is proxied; production sets SECURE_COOKIES=1 behind TLS (see app/DEPLOY.md).
+
+name: team26-jeran
+
+services:
+  deps:
+    image: node:24-slim
+    working_dir: /app
+    command: ["sh", "-ec", "npm ci --no-audit --no-fund"]
+    volumes:
+      - ./app:/app
+    environment:
+      - npm_config_update_notifier=false
+
+  api:
+    image: node:24-slim
+    working_dir: /app
+    depends_on:
+      deps:
+        condition: service_completed_successfully
+    volumes:
+      - ./app:/app
+      - api-data:/data
+    environment:
+      - NODE_ENV=development
+      - HOST=0.0.0.0
+      - PORT=8787
+      - DB_PATH=/data/team26.db
+      - DEMO=1
+      - CHOKIDAR_USEPOLLING=true
+    command: ["node", "--watch-path=/app/server", "server/index.js"]
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8787/api/auth/me').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    restart: on-failure
+    labels:
+      base44.project: jeran-api
+      base44.kind: api
+      base44.port: "8787"
+
+  web:
+    image: node:24-slim
+    working_dir: /app
+    depends_on:
+      deps:
+        condition: service_completed_successfully
+      api:
+        condition: service_healthy
+    volumes:
+      - ./app:/app
+    environment:
+      - API_PROXY_TARGET=http://api:8787
+      - __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS
+      - CHOKIDAR_USEPOLLING=true
+    ports:
+      - "3000:5173"
+    command: ["npx", "vite", "--host", "0.0.0.0", "--port", "5173"]
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:5173/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    restart: on-failure
+    labels:
+      base44.project: jeran
+      base44.kind: web
+      base44.port: "3000"
+
+volumes:
+  api-data:
