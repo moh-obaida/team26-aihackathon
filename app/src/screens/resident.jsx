@@ -5,7 +5,7 @@ import { Icon } from '../icons.jsx';
 import { Link, useRouter } from '../router.jsx';
 import {
   Button, ConfirmDialog, EmptyState, FormField, Hero, Load, OpportunityCard, PageHeader, Section, Sheet, StatusBadge,
-  useAction, useApi, useAuth, useGreeting, VerificationTimeline,
+  CountUp, useAction, useApi, useAuth, useGreeting, VerificationTimeline,
 } from '../ui.jsx';
 
 const CATS = ['cleanup', 'gardening', 'seniors', 'reading', 'pets', 'events', 'tutoring', 'other'];
@@ -44,7 +44,7 @@ export function Home() {
             <div className="tile-row">
               {tiles.map((x) => (
                 <Link key={x.k} className={`tile ${x.hot && x.n > 0 ? 'hot' : ''}`} to="/resident/opportunities">
-                  <span className="v num">{fmt.num(x.n)}</span>
+                  <span className="v num"><CountUp value={x.n} /></span>
                   <span className="k">{x.k}</span>
                 </Link>
               ))}

@@ -239,13 +239,27 @@ function ShellInner({ path, navigate }) {
   const notif = useApi(user ? '/notifications' : null, [path]);
   const unread = notif.data?.unread || 0;
 
+  // Which way the screen moved decides how it animates: deeper = push in, shallower = pop back, same level = tab change.
   const role = user ? user.role : 'public';
   const nav = NAV[role];
+  const prevPath = useRef(path);
+  const navDir = useRef('tab');
+  if (prevPath.current !== path) {
+    const depth = (p) => p.split('/').filter(Boolean).length;
+    const isTab = (p) => nav.some(([to]) => to === p) || Object.values(HOME).includes(p) || p === '/settings';
+    const a = depth(prevPath.current);
+    const b = depth(path);
+    navDir.current = isTab(prevPath.current) && isTab(path) ? 'tab' : b > a ? 'push' : b < a ? 'pop' : 'tab';
+    prevPath.current = path;
+  }
+
   const isActive = (to) => {
     if (/\/settings$/.test(to)) return path === to || path.startsWith('/settings') || path === '/profile';
     if (role === 'moderator' && to === '/moderator/memberships') return isReviewPath(path);
     return to === path || (to !== HOME[role] && to !== '/' && path.startsWith(to + '/') && !(to === '/resident/opportunities' && path === '/resident/opportunities/new'));
   };
+
+  const activeIdx = nav.findIndex(([to]) => isActive(to));
 
   let content;
   if (waiting) content = <ConnectionState onRetry={retry} busy={retrying} />;
@@ -275,7 +289,7 @@ function ShellInner({ path, navigate }) {
           </Link>
         )}
         <div className="grow" />
-        <div className="lang-pill" role="group" aria-label={t('lang.switchLabel')}>
+        <div className="lang-pill" role="group" aria-label={t('lang.switchLabel')} data-active={lang}>
           <button type="button" lang="en" aria-pressed={lang === 'en'} onClick={() => lang !== 'en' && setLang('en')}>EN</button>
           <button type="button" lang="ar" aria-pressed={lang === 'ar'} onClick={() => lang !== 'ar' && setLang('ar')}>العربية</button>
         </div>
@@ -294,11 +308,12 @@ function ShellInner({ path, navigate }) {
       {!online && <div className="offline" role="status">{t('common.offline')}</div>}
       <div className="body" ref={scrollerRef}>
         <main id="main" ref={mainRef} tabIndex={-1} className={`${showNav ? '' : 'no-nav'} ${startScreen ? 'start' : ''}`}>
-          <div className="screen" key={path}>{content}</div>
+          <div className={`screen ${navDir.current}`} key={path}>{content}</div>
         </main>
       </div>
       {showNav && (
-        <nav className="bottom-nav" aria-label={t('nav.main')}>
+        <nav className="bottom-nav" aria-label={t('nav.main')} style={{ '--n': nav.length, '--i': Math.max(0, activeIdx) }} data-pill={activeIdx >= 0 && !nav[activeIdx][3] ? 'on' : 'off'}>
+          <span className="nav-pill" aria-hidden="true" />
           {nav.map(([to, icon, label, create]) => (
             <Link key={to} to={to} aria-current={isActive(to) ? 'page' : undefined} className={create ? 'create' : ''}>
               {create ? <span className="ic-wrap"><Icon name={icon} size={20} /></span> : <Icon name={icon} />}

@@ -667,15 +667,16 @@ export function createApp({ dbPath = ':memory:', demo = false, secureCookies = f
     const c = q1('SELECT status, reason FROM consents WHERE application_id=?', a.id);
     return { ...a, consent_status: c?.status, consent_reason: c?.reason, opportunity: oppView(o, { id: a.student_id, role: 'student' }) };
   };
+  // literal path before the :id route, or 'mine' is read as an id and the student's Applied tab gets a 404
+  route('GET', '/api/applications/mine', ['student'], ({ user }) => ({
+    applications: q('SELECT * FROM applications WHERE student_id=? ORDER BY created_at DESC', user.id).map(appView),
+  }));
   route('GET', '/api/applications/:id', ['student'], ({ user, params }) => {
     const a = q1('SELECT * FROM applications WHERE id=?', params.id);
     if (!a || a.student_id !== user.id) throw notFound();
     const p = q1('SELECT * FROM participation WHERE application_id=?', a.id);
     return { application: { ...appView(a), participation: p ? partView(p) : null } };
   });
-  route('GET', '/api/applications/mine', ['student'], ({ user }) => ({
-    applications: q('SELECT * FROM applications WHERE student_id=? ORDER BY created_at DESC', user.id).map(appView),
-  }));
 
   route('GET', '/api/opportunities/:id/applications', ['resident'], ({ user, params }) => {
     const opp = getOpp(params.id);

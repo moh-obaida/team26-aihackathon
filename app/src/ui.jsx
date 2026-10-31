@@ -15,6 +15,7 @@ export function ToastHost({ children }) {
   const push = useCallback((text, tone = 'ok') => {
     const id = Math.random().toString(36).slice(2);
     setItems((x) => [...x.slice(-2), { id, text, tone }]);
+    setTimeout(() => setItems((x) => x.map((i) => (i.id === id ? { ...i, leaving: true } : i))), 3900);
     setTimeout(() => setItems((x) => x.filter((i) => i.id !== id)), 4200);
   }, []);
   return (
@@ -22,7 +23,7 @@ export function ToastHost({ children }) {
       {children}
       <div className="toasts" role="status" aria-live="polite">
         {items.map((i) => (
-          <div key={i.id} className={`toast ${i.tone === 'bad' ? 'bad' : ''}`}>
+          <div key={i.id} className={`toast ${i.tone === 'bad' ? 'bad' : ''} ${i.leaving ? 'leaving' : ''}`}>
             <Icon name={i.tone === 'bad' ? 'alert' : 'check'} size={18} />
             <span>{i.text}</span>
           </div>
@@ -30,6 +31,34 @@ export function ToastHost({ children }) {
       </div>
     </ToastCtx.Provider>
   );
+}
+
+// ---------- motion helpers ----------
+export const motionReduced = () => {
+  try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches || document.documentElement.dataset.motion === 'reduce'; } catch { return false; }
+};
+
+/** Number that counts up to its value (ease-out), then settles on the exact figure. Instant when motion is reduced. */
+export function CountUp({ value }) {
+  const { fmt } = useI18n();
+  const [shown, setShown] = useState(() => (motionReduced() ? value : 0));
+  const from = useRef(motionReduced() ? value : 0);
+  useEffect(() => {
+    if (motionReduced() || from.current === value) { setShown(value); from.current = value; return undefined; }
+    const start = performance.now();
+    const a = from.current;
+    let raf;
+    const whole = Number.isInteger(value) && Number.isInteger(a);
+    const tick = (now) => {
+      const p = Math.min(1, (now - start) / 750);
+      const v = a + (value - a) * (1 - (1 - p) ** 4);
+      setShown(p === 1 ? value : whole ? Math.round(v) : Math.round(v * 10) / 10);
+      if (p < 1) raf = requestAnimationFrame(tick); else from.current = value;
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+  return fmt.num(shown);
 }
 
 // ---------- data hooks ----------
@@ -279,25 +308,63 @@ export function SearchField({ value, onChange, placeholder, label }) {
 /** Native <dialog> gives a real focus trap, Esc to close and an inert background. */
 export function Sheet({ open, onClose, title, children, footer }) {
   const ref = useRef(null);
+  const drag = useRef(null);
   const { t } = useI18n();
   const hid = useId();
+  const [closing, setClosing] = useState(false);
+  // Open with the platform dialog (focus trap, Esc, inert background); close after the slide-out has played.
   useEffect(() => {
     const d = ref.current;
-    if (!d) return;
-    if (open && !d.open) d.showModal();
-    if (!open && d.open) d.close();
+    if (!d) return undefined;
+    if (open) { setClosing(false); if (!d.open) d.showModal(); return undefined; }
+    if (!d.open) return undefined;
+    if (motionReduced()) { d.close(); return undefined; }
+    setClosing(true);
+    const id = setTimeout(() => { d.close(); setClosing(false); d.style.removeProperty('--drag'); }, 230);
+    return () => clearTimeout(id);
   }, [open]);
+
+  // Swipe the title bar down to dismiss, like a native sheet.
+  const onDown = (e) => {
+    if (e.target.closest('button') || e.pointerType === 'mouse') return;
+    drag.current = { y: e.clientY, t: performance.now(), dy: 0, id: e.pointerId };
+  };
+  const onMove = (e) => {
+    const g = drag.current;
+    if (!g) return;
+    g.dy = Math.max(0, e.clientY - g.y);
+    if (g.dy > 6) {
+      e.currentTarget.setPointerCapture?.(g.id);
+      ref.current.style.transition = 'none';
+      ref.current.style.transform = `translateY(${g.dy}px)`;
+    }
+  };
+  const onUp = () => {
+    const g = drag.current;
+    drag.current = null;
+    const d = ref.current;
+    if (!g || !d || g.dy <= 6) return;
+    const fast = g.dy / Math.max(1, performance.now() - g.t) > 0.6;
+    d.style.transition = '';
+    d.style.transform = '';
+    if (g.dy > 110 || fast) { d.style.setProperty('--drag', `${g.dy}px`); onClose(); } else {
+      d.animate([{ transform: `translateY(${g.dy}px)` }, { transform: 'translateY(0)' }], { duration: 320, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
+    }
+  };
+
   return (
     <dialog
       ref={ref}
       className="sheet"
+      data-closing={closing || undefined}
       aria-labelledby={hid}
       onCancel={(e) => { e.preventDefault(); onClose(); }}
       onClick={(e) => { if (e.target === ref.current) onClose(); }}
     >
-      {open && (
+      {(open || closing) && (
         <div className="sheet-inner">
-          <div className="sheet-head">
+          <div className="sheet-head" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
+            <span className="sheet-grab" aria-hidden="true" />
             <h2 id={hid}>{title}</h2>
             <button type="button" className="icon-btn" onClick={onClose} aria-label={t('common.close')}><Icon name="x" /></button>
           </div>
@@ -516,7 +583,7 @@ export function HoursSummary({ verified, pending, to, waitingHost = 0 }) {
       <div className="hours-main">
         <Seal size={54} />
         <div className="grow">
-          <div className="hours-figure"><span className="big num">{fmt.num(verified)}</span><span className="lbl">{t('home.hoursVerified')}</span></div>
+          <div className="hours-figure"><span className="big num"><CountUp value={verified} /></span><span className="lbl">{t('home.hoursVerified')}</span></div>
           {logged > 0 && (
             <div className="hours-bar" role="img" aria-label={t('home.hoursPending', { n: fmt.num(pending) })}>
               <span style={{ inlineSize: `${share}%` }} />

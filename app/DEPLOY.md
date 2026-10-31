@@ -48,7 +48,13 @@ If the phone cannot reach the server, a signed-in user sees a clear "Can't reach
 
 ## 4. What has and has not been verified
 
-Verified (automated, `npm test` and `npm run demo:check`): manifest and icon integrity, iOS/mobile metadata, service-worker caching rules, HSTS/redirect/proxy behaviour, the full nine-step demo in English and Arabic at iPhone- and Pixel-sized viewports in headless Chromium, offline and reconnect behaviour, deep links.
+Verified (automated: `npm test` and `npm run demo:check`, run in headless **Chromium** with touch emulation at iPhone- and Pixel-sized viewports):
+manifest and icon integrity, iOS/mobile metadata, service-worker caching rules, HSTS/redirect/proxy behaviour, the full nine-step demo in English and Arabic, the student Applied tab, offline launch and reconnect, deep links, safe-area insets (Chromium's inset emulation), screen/tab/sheet motion and reduced-motion.
+The production environment settings (`SECURE_COOKIES=1 TRUST_PROXY=1`) were also run behind a local TLS-terminating proxy with a self-signed certificate: HTTPS, HSTS and the http→https redirect behave as described.
 
-**Not verified:** installation on a physical iPhone or Android phone, Safari/WebKit rendering (tests ran in Chromium), a real notched-device safe-area check (Chromium's safe-area emulation was used), and a deployment on a real public HTTPS host.
-Do a 5-minute install on one iPhone and one Android phone before the demo.
+**Not verified:**
+- installation on a physical iPhone or Android phone, and Safari/WebKit rendering (no WebKit here);
+- the `Dockerfile` was not built (no Docker daemon in the build sandbox);
+- a deployment on a real public HTTPS host with a trusted certificate.
+
+Do a 5-minute install on one iPhone and one Android phone before the demo, and run `BASE_URL=https://your-host npm run demo:check` against the deployed URL (it uses the demo accounts, so deploy with `DEMO=1`).

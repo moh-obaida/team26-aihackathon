@@ -45,7 +45,16 @@ class Session {
     await this.page.getByLabel(await this.t('auth.email'), { exact: true }).fill(`${user}@team26.demo`);
     await this.page.getByLabel(await this.t('auth.password'), { exact: true }).fill(PASSWORD);
     await this.page.locator('form').getByRole('button', { name: await this.t('auth.login') }).click();
-    await this.page.waitForURL((u) => !u.pathname.startsWith('/login'));
+    // the server limits sign-ins per address (20/min); a long run can hit it, so wait it out once rather than fail
+    const outcome = await Promise.race([
+      this.page.waitForURL((u) => !u.pathname.startsWith('/login')).then(() => 'in'),
+      this.page.locator('.form-error').waitFor().then(() => 'error'),
+    ]);
+    if (outcome === 'error') {
+      await this.page.waitForTimeout(31000);
+      await this.page.locator('form').getByRole('button', { name: await this.t('auth.login') }).click();
+      await this.page.waitForURL((u) => !u.pathname.startsWith('/login'));
+    }
     await this.page.waitForLoadState('networkidle');
   }
   btn(name, scope) { return (scope || this.page).getByRole('button', { name, exact: true }); }
@@ -127,6 +136,8 @@ async function demoWorkflow(browser, device, lang) {
     await s.btn(await s.t('detail.apply')).click();
     await s.confirmDialog(await s.t('detail.apply'));
     await s.shot('5-applied');
+    await s.go('/student/applications');
+    await s.page.locator('a.list-row', { hasText: title }).first().waitFor();
   });
 
   await step(6, 'guardian approves participation', async () => {
@@ -168,8 +179,8 @@ async function demoWorkflow(browser, device, lang) {
     const verified = await s.page.evaluate(async () => (await (await fetch('/api/student/dashboard')).json()).verified_hours);
     if (!(verified >= 1)) throw new Error('dashboard verified_hours = ' + verified);
     await s.go('/student');
-    const shown = await s.page.locator('.hours-card .big').innerText();
-    if (/^[0٠]$/.test(shown.trim())) throw new Error('hours card still shows zero');
+    // the figure counts up from zero, so wait for it to settle before judging it
+    await s.page.waitForFunction(() => { const t = document.querySelector('.hours-card .big')?.textContent.trim(); return t && !/^[0٠]$/.test(t); }, null, { timeout: 4000 }).catch(() => { throw new Error('hours card still shows zero'); });
     await s.shot('9-home');
     await s.go('/student/hours');
     await s.page.locator('a[href="/api/me/participation/export?format=csv"]').waitFor();
@@ -263,8 +274,83 @@ async function pwaChecks(browser) {
   const nf = await d.ctx.request.get('/assets/does-not-exist.js');
   check('missing build files are real 404s (not the app shell)', nf.status() === 404);
   const wrongRole = await d.go('/admin').then(() => d.page.locator('main').innerText());
-  check('a route for another role is refused, not shown', wrongRole.includes(en['route.deniedTitle']));
+  check('a route for another role is refused, not shown', wrongRole.includes(await d.t('route.deniedTitle')));
   await d.ctx.close();
+}
+
+async function motionChecks(browser) {
+  const s = new Session(browser, 'iphone', 'en', 'motion');
+  await s.open();
+  const running = () => s.page.evaluate(() => document.getAnimations().map((a) => a.animationName || a.transitionProperty).filter(Boolean));
+  const sample = async (ms) => { await s.page.waitForTimeout(ms); return running(); };
+  await s.login('yusuf.student');
+  await s.go('/student');
+
+  // tab change: soft fade, and the tab-bar highlight glides (position changes over time rather than jumping)
+  const pillX = () => s.page.evaluate(() => new DOMMatrix(getComputedStyle(document.querySelector('.nav-pill')).transform).m41);
+  const x0 = await pillX();
+  await s.page.getByRole('link', { name: en['nav.hours'], exact: true }).click();
+  const mid = await sample(90);
+  const xMid = await pillX();
+  await s.page.waitForTimeout(700);
+  const x1 = await pillX();
+  check('tab change plays the tab fade', mid.includes('screen-tab'), mid.join(','));
+  check('tab highlight glides to the new tab (mid-flight position between start and end)', Math.min(x0, x1) < xMid && xMid < Math.max(x0, x1) && x1 > x0, `${x0} → ${xMid} → ${x1}`);
+
+  // going deeper pushes, going back pops
+  await s.go('/student/applications');
+  await s.page.locator('a.list-row').first().click().catch(() => {});
+  const pushed = await sample(60);
+  if (new URL(s.page.url()).pathname.split('/').length > 3) {
+    check('opening a detail screen pushes in from the side', pushed.includes('screen-push'), pushed.join(','));
+    await s.page.goBack();
+    const popped = await sample(60);
+    check('going back pops', popped.includes('screen-pop'), popped.join(','));
+  } else check('opening a detail screen pushes in from the side', false, 'no detail link found');
+
+  // cards settle in with a stagger
+  await s.go('/student/discover');
+  await s.page.waitForSelector('.cards > *');
+  const delays = await s.page.evaluate(() => [...document.querySelectorAll('.cards > *')].slice(0, 3).map((e) => getComputedStyle(e).animationDelay));
+  check('list items enter with increasing delays', parseFloat(delays[1]) > parseFloat(delays[0]) && parseFloat(delays[2]) > parseFloat(delays[1]), delays.join(' '));
+
+  // the hours figure counts up and lands on the exact value
+  await s.go('/student');
+  const early = await s.page.locator('.hours-card .big').innerText();
+  const settled = await (async () => { await s.page.waitForTimeout(1100); return s.page.locator('.hours-card .big').innerText(); })();
+  const real = await s.page.evaluate(async () => (await (await fetch('/api/student/dashboard')).json()).verified_hours);
+  check('hours figure ends on the exact verified total', parseFloat(settled) === real, `${early} → ${settled} (api ${real})`);
+
+  // sheets slide out and can be swiped away
+  await s.go('/student/discover');
+  await s.page.getByRole('button', { name: en['common.filters'] }).click();
+  await s.page.locator('dialog[open]').waitFor();
+  await s.page.waitForTimeout(500);
+  await s.page.getByRole('button', { name: en['common.close'] }).click();
+  const closing = await s.page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(document.querySelector('dialog.sheet').hasAttribute('data-closing')))));
+  await s.page.waitForFunction(() => !document.querySelector('dialog.sheet[open]'));
+  check('closing a sheet animates out before it is removed', closing);
+  await s.page.getByRole('button', { name: en['common.filters'] }).click();
+  await s.page.locator('dialog[open]').waitFor();
+  await s.page.waitForTimeout(500);
+  const box = await s.page.locator('.sheet-head').boundingBox();
+  const cdp = await s.ctx.newCDPSession(s.page);
+  const tx = box.x + 80; const ty = box.y + box.height / 2;
+  const touch = (type, y) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x: tx, y }] });
+  await touch('touchStart', ty);
+  for (let i = 1; i <= 8; i++) await touch('touchMove', ty + i * 25);
+  await touch('touchEnd');
+  await s.page.waitForFunction(() => !document.querySelector('dialog.sheet[open]'), null, { timeout: 3000 }).catch(() => {});
+  check('swiping a sheet down dismisses it', !(await s.page.locator('dialog.sheet[open]').count()));
+
+  // reduced motion: nothing animates and numbers do not count
+  await s.page.emulateMedia({ reducedMotion: 'reduce' });
+  await s.go('/student');
+  await s.page.waitForTimeout(150);
+  const longRunning = await s.page.evaluate(() => document.getAnimations().filter((a) => a.effect.getComputedTiming().duration > 20 && a.playState === 'running').map((a) => a.animationName));
+  const instant = await s.page.locator('.hours-card .big').innerText();
+  check('reduced motion: no animation runs and the figure is final immediately', longRunning.length === 0 && parseFloat(instant) === real, `${longRunning.join(',')} / ${instant}`);
+  await s.ctx.close();
 }
 
 const browser = await chromium.launch({ executablePath: CHROMIUM });
@@ -272,6 +358,7 @@ try {
   await demoWorkflow(browser, 'iphone', 'en');
   await demoWorkflow(browser, 'pixel', 'ar');
   await pwaChecks(browser);
+  await motionChecks(browser);
 } finally { await browser.close(); }
 const failed = results.filter((r) => !r.ok);
 console.log(`\n${results.length - failed.length}/${results.length} checks passed against ${BASE}`);

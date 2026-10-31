@@ -26,4 +26,6 @@ Demo accounts (all fictional, password `Demo#2026`) are listed on the sign-in sc
 8. **layla.mod** → Reviews → Hours → *Verify hours*.
 9. Student → Home shows verified hours → Hours → *Download as spreadsheet* / *Open printable summary*.
 
+Deploying for a live demo and installing on phones (iOS/Android, no Xcode): see [DEPLOY.md](DEPLOY.md). `npm run demo:check` drives this whole demo on phone-sized viewports.
+
 Deployment needs HTTPS hosting; set `SECURE_COOKIES=1` behind TLS. Hours are community-verified only — not an official UAE certificate.

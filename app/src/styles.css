@@ -59,7 +59,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   :root { --t-fast: 0ms; --t-med: 0ms; }
-  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-delay: 0ms !important; transition-duration: 0.001ms !important; }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -510,7 +510,7 @@ main { padding-bottom: calc(64px + 10px + var(--s7) + env(safe-area-inset-bottom
 /* ---------- device preferences ---------- */
 html[data-text='large'] { font-size: 112.5%; }
 html[data-text='larger'] { font-size: 125%; }
-html[data-motion='reduce'] *, html[data-motion='reduce'] *::before, html[data-motion='reduce'] *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+html[data-motion='reduce'] *, html[data-motion='reduce'] *::before, html[data-motion='reduce'] *::after { animation-duration: 0.001ms !important; animation-delay: 0ms !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
 html[data-underline='on'] main a { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ---------- dark theme: same roles, night values ---------- */
@@ -571,8 +571,6 @@ h2 { font-weight: 650; }
 .section { margin-top: var(--s6); }
 
 /* tab changes animate like a push, never a page load */
-.screen { animation: screen-in 260ms var(--ease) both; }
-@keyframes screen-in { from { opacity: 0; transform: translateY(10px); } }
 
 /* one column, always: no desktop dashboards */
 .wide-2 { display: flex; flex-direction: column; gap: var(--s4); }
@@ -766,3 +764,141 @@ html[data-theme='dark'] .standing.wait .standing-ic, html[data-theme='dark'] .st
 
 .connection { min-height: 60dvh; justify-content: center; }
 .connection h1 { font-size: var(--fs-l); }
+
+
+/* =====================================================================
+   Motion layer. iOS's own curve, short durations, transform/opacity only.
+   Everything here is switched off by prefers-reduced-motion and Settings → Appearance → Reduce motion.
+   ===================================================================== */
+:root {
+  --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);    /* the curve UIKit sheets and pushes use */
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);   /* slight overshoot for things that "land" */
+}
+
+/* screens move the way the navigation did: push in from the trailing edge, pop back from the leading edge, tabs just fade */
+.screen { --d: 1; animation: screen-tab 220ms var(--ease-ios) backwards; }
+[dir='rtl'] .screen { --d: -1; }
+.screen.push { animation: screen-push 340ms var(--ease-ios) backwards; }
+.screen.pop { animation: screen-pop 300ms var(--ease-ios) backwards; }
+@keyframes screen-tab { from { opacity: 0; } }
+@keyframes screen-push { from { opacity: 0; transform: translateX(calc(var(--d) * 34px)); } }
+@keyframes screen-pop { from { opacity: 0; transform: translateX(calc(var(--d) * -26px)); } }
+
+/* content settles in, one item after another (backwards fill: the animation lets go afterwards, so press feedback still works) */
+.cards > *, .list > li, .tile-row > *, .queue-tiles > *, .hero-text > *, .hours-card, .standing, .consent, .panel, .quiet-empty {
+  animation: rise-in 420ms var(--ease-ios) backwards; animation-delay: calc(var(--i, 0) * 45ms + 40ms);
+}
+.panel .panel, .consent .panel, .cards > .panel, .cards > .consent { animation-delay: calc(var(--i, 0) * 45ms + 40ms); }
+@keyframes rise-in { from { opacity: 0; transform: translateY(14px); } }
+.cards > *:nth-child(1) { --i: 0; }
+.cards > *:nth-child(2) { --i: 1; }
+.cards > *:nth-child(3) { --i: 2; }
+.cards > *:nth-child(4) { --i: 3; }
+.cards > *:nth-child(5) { --i: 4; }
+.cards > *:nth-child(6) { --i: 5; }
+.cards > *:nth-child(7) { --i: 6; }
+.cards > *:nth-child(8) { --i: 7; }
+.list > li:nth-child(1) { --i: 0; }
+.list > li:nth-child(2) { --i: 1; }
+.list > li:nth-child(3) { --i: 2; }
+.list > li:nth-child(4) { --i: 3; }
+.list > li:nth-child(5) { --i: 4; }
+.list > li:nth-child(6) { --i: 5; }
+.list > li:nth-child(7) { --i: 6; }
+.list > li:nth-child(8) { --i: 7; }
+.tile-row > *:nth-child(1) { --i: 0; }
+.tile-row > *:nth-child(2) { --i: 1; }
+.tile-row > *:nth-child(3) { --i: 2; }
+.tile-row > *:nth-child(4) { --i: 3; }
+.tile-row > *:nth-child(5) { --i: 4; }
+.tile-row > *:nth-child(6) { --i: 5; }
+.tile-row > *:nth-child(7) { --i: 6; }
+.tile-row > *:nth-child(8) { --i: 7; }
+.queue-tiles > *:nth-child(1) { --i: 0; }
+.queue-tiles > *:nth-child(2) { --i: 1; }
+.queue-tiles > *:nth-child(3) { --i: 2; }
+.queue-tiles > *:nth-child(4) { --i: 3; }
+.queue-tiles > *:nth-child(5) { --i: 4; }
+.queue-tiles > *:nth-child(6) { --i: 5; }
+.queue-tiles > *:nth-child(7) { --i: 6; }
+.queue-tiles > *:nth-child(8) { --i: 7; }
+.hero-text > *:nth-child(1) { --i: 0; }
+.hero-text > *:nth-child(2) { --i: 1; }
+.hero-text > *:nth-child(3) { --i: 2; }
+.hero-text > *:nth-child(4) { --i: 3; }
+.hero-text > *:nth-child(5) { --i: 4; }
+.hero-text > *:nth-child(6) { --i: 5; }
+.hero-text > *:nth-child(7) { --i: 6; }
+.hero-text > *:nth-child(8) { --i: 7; }
+.hero .skyline { animation: sky-in 900ms var(--ease-ios) 60ms backwards; }
+@keyframes sky-in { from { opacity: 0; translate: 0 16px; } }
+.hours-bar span { transform-origin: left center; animation: bar-in 900ms var(--ease-ios) 250ms backwards; }
+[dir='rtl'] .hours-bar span { transform-origin: right center; }
+@keyframes bar-in { from { transform: scaleX(0); } }
+
+/* press feedback: quick squash, springy release */
+.btn, .chip, .opp, .tile, .list-row, .setting-row.nav, .profile-card, .next-action, .standing, .queue-tiles a, .hours-link, .lang-pill button, .bottom-nav a, .icon-btn {
+  transition: transform 460ms var(--spring), background var(--t-fast), color var(--t-fast), border-color var(--t-fast), opacity var(--t-fast);
+}
+.btn:active:not(:disabled), .chip:active, .opp:active, .tile:active, .standing:active, .queue-tiles a:active, .next-action:active, .profile-card:active, .icon-btn:active, .lang-pill button:active {
+  transform: scale(0.96); opacity: 0.92; transition-duration: 80ms;
+}
+a.opp:active, .standing:active, .next-action:active, .profile-card:active { transform: scale(0.982); }
+.list-row:active, .setting-row.nav:active { transition-duration: 60ms; }
+
+/* tab bar: one highlight that glides to the new tab, and the new tab's icon pops */
+.bottom-nav { --d: 1; }
+[dir='rtl'] .bottom-nav { --d: -1; }
+.nav-pill {
+  position: absolute; top: 6px; bottom: 6px; inset-inline-start: 6px; border-radius: 26px; background: var(--teal-tint); pointer-events: none;
+  width: calc((100% - 12px - 2px * (var(--n) - 1)) / var(--n));
+  transform: translateX(calc(var(--d) * var(--i) * (100% + 2px)));
+  transition: transform 520ms var(--ease-ios), opacity 200ms;
+}
+.bottom-nav[data-pill='off'] .nav-pill { opacity: 0; }
+.bottom-nav a { z-index: 1; }
+.bottom-nav a[aria-current='page'] { background: transparent; }
+.bottom-nav a[aria-current='page'] svg { animation: tab-pop 520ms var(--spring); }
+@keyframes tab-pop { 0% { transform: scale(0.78); } 100% { transform: scale(1); } }
+
+/* language switch: a thumb slides between EN and العربية */
+.lang-pill { position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; --d: 1; --k: 0; }
+[dir='rtl'] .lang-pill { --d: -1; }
+.lang-pill[data-active='ar'] { --k: 1; }
+.lang-pill::before {
+  content: ''; position: absolute; top: 3px; bottom: 3px; inset-inline-start: 3px; width: calc((100% - 8px) / 2); border-radius: 999px; background: var(--brand-grad-strong);
+  transform: translateX(calc(var(--d) * var(--k) * (100% + 2px))); transition: transform 420ms var(--ease-ios);
+}
+.lang-pill button { position: relative; z-index: 1; transition: color 200ms, transform 460ms var(--spring); }
+.lang-pill button[aria-pressed='true'] { background: transparent; color: #fff; }
+
+/* sheets: rise on the iOS curve, dim the page, fall away again; the title bar can be swiped down */
+dialog.sheet[open] { animation: sheet-in 420ms var(--ease-ios); }
+dialog.sheet[open]::backdrop { animation: fade-in 320ms ease-out; }
+dialog.sheet[data-closing] { animation: sheet-out 230ms cubic-bezier(0.5, 0, 0.75, 0) forwards; }
+dialog.sheet[data-closing]::backdrop { animation: fade-out 230ms ease-in forwards; }
+@keyframes sheet-in { from { transform: translateY(100%); } }
+@keyframes sheet-out { from { transform: translateY(var(--drag, 0px)); } to { transform: translateY(100%); } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes fade-out { to { opacity: 0; } }
+@media (min-width: 600px) {
+  @keyframes sheet-in { from { transform: translateY(40px) scale(0.96); opacity: 0; } }
+  @keyframes sheet-out { from { transform: translateY(var(--drag, 0px)); opacity: 1; } to { transform: translateY(24px) scale(0.97); opacity: 0; } }
+}
+.sheet-head { position: relative; touch-action: none; cursor: grab; }
+.sheet-grab { position: absolute; top: 6px; inset-inline: 0; margin-inline: auto; width: 38px; height: 5px; border-radius: 3px; background: var(--line-strong); opacity: 0.7; }
+.sheet-head { padding-top: calc(var(--s4) + 6px); }
+
+/* toasts spring in and slide out */
+.toast { animation: toast-in 520ms var(--spring); }
+.toast.leaving { animation: toast-out 280ms var(--ease-ios) forwards; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(24px) scale(0.92); } }
+@keyframes toast-out { to { opacity: 0; transform: translateY(12px) scale(0.96); } }
+
+/* switches and segmented controls move on the spring */
+.switch { transition: background 260ms var(--ease-ios); }
+.switch .knob { transition: inset-inline-start 380ms var(--spring), width 200ms; }
+.switch:active .knob { width: 33px; }
+.switch[aria-checked='true']:active .knob { inset-inline-start: 16px; }
+.segmented button, .tabs a, .tabs button, .chip { transition: background 220ms var(--ease-ios), color 220ms, box-shadow 220ms, transform 460ms var(--spring); }
+.skeleton, .skel { animation-duration: 1.4s; }
