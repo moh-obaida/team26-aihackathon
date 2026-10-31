@@ -118,14 +118,6 @@ const NAV = {
   moderator: [['/moderator', 'home', 'nav.overview'], ['/moderator/memberships', 'inbox', 'nav.reviews'], ['/moderator/reports', 'flag', 'nav.reports'], ['/moderator/community', 'building', 'nav.community']],
   admin: [['/admin', 'chart', 'nav.overview'], ['/admin/communities', 'building', 'nav.communities'], ['/admin/users', 'users', 'nav.users'], ['/admin/reports', 'flag', 'nav.reports']],
 };
-// Extra destinations shown only in the desktop side rail.
-const SIDE_EXTRA = {
-  student: [['/explore', 'globe', 'nav.explore'], ['/student/activities', 'calendar', 'nav.activities'], ['/student/history', 'history', 'nav.history'], ['/student/communities', 'building', 'nav.communities']],
-  resident: [['/explore', 'globe', 'nav.explore'], ['/resident/verification', 'shieldCheck', 'nav.verification'], ['/resident/history', 'history', 'nav.history']],
-  guardian: [['/explore', 'globe', 'nav.explore']],
-  moderator: [['/moderator/opportunities', 'list', 'mod.opportunities'], ['/moderator/hours', 'clock', 'mod.hours']],
-  admin: [['/admin/audit', 'history', 'nav.audit'], ['/admin/moderators', 'shield', 'nav.moderators'], ['/admin/verification', 'clock', 'nav.verificationOversight'], ['/admin/settings', 'gear', 'nav.platformSettings']],
-};
 const isReviewPath = (p) => /^\/moderator\/(memberships|opportunities|hours)/.test(p);
 
 function readLang() {
@@ -205,6 +197,7 @@ function ShellInner({ path, navigate }) {
   const { t, lang, setLang } = i18n;
   const online = useOnline();
   const mainRef = useRef(null);
+  const scrollerRef = useRef(null);
 
   let match = null;
   for (const [pattern, Comp, access] of ROUTES) {
@@ -227,14 +220,13 @@ function ShellInner({ path, navigate }) {
     document.title = h && path !== '/' ? `${h.textContent.trim()} — ${t('app.name')}` : `${t('app.name')} — ${t('app.tagline')}`;
   });
   // Move focus to main content on navigation so screen readers announce the new page.
-  useEffect(() => { mainRef.current?.focus({ preventScroll: true }); }, [path]);
+  useEffect(() => { mainRef.current?.focus({ preventScroll: true }); if (scrollerRef.current) scrollerRef.current.scrollTop = 0; }, [path]);
 
   const notif = useApi(user ? '/notifications' : null, [path]);
   const unread = notif.data?.unread || 0;
 
   const role = user ? user.role : 'public';
   const nav = NAV[role];
-  const sideItems = user ? [...nav, ...SIDE_EXTRA[role]] : nav;
   const isActive = (to) => {
     if (/\/settings$/.test(to)) return path === to || path.startsWith('/settings') || path === '/profile';
     if (role === 'moderator' && to === '/moderator/memberships') return isReviewPath(path);
@@ -283,17 +275,9 @@ function ShellInner({ path, navigate }) {
         )}
       </header>
       {!online && <div className="offline" role="status">{t('common.offline')}</div>}
-      <div className={`body ${user ? '' : 'no-side'}`}>
-        {user && <nav className="side-nav" aria-label={t('nav.main')}>
-          {sideItems.map(([to, icon, label]) => (
-            <Link key={to} to={to} aria-current={isActive(to) ? 'page' : undefined}><Icon name={icon} />{t(label)}</Link>
-          ))}
-          {user && <Link to="/notifications" aria-current={path === '/notifications' ? 'page' : undefined}><Icon name="bell" />{t('nav.notifications')}{unread > 0 && <span className="count">{unread}</span>}</Link>}
-          <Link to="/help" aria-current={path === '/help' ? 'page' : undefined}><Icon name="help" />{t('nav.help')}</Link>
-          <div className="side-foot">{t('common.emergency')}</div>
-        </nav>}
+      <div className="body" ref={scrollerRef}>
         <main id="main" ref={mainRef} tabIndex={-1} className={showNav ? '' : 'no-nav'}>
-          {content}
+          <div className="screen" key={path}>{content}</div>
         </main>
       </div>
       {showNav && (

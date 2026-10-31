@@ -30,8 +30,9 @@
   --blue: #12627a;
   --blue-tint: #dceff3;
 
-  --font-ui: 'IBM Plex Sans Arabic', system-ui, sans-serif;
-  --font-display: 'Readex Pro Variable', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  /* Instrument Sans carries Latin; Alexandria carries Arabic (and any glyph Instrument lacks) */
+  --font-ui: 'Instrument Sans Variable', 'Alexandria Variable', system-ui, sans-serif;
+  --font-display: 'Instrument Sans Variable', 'Alexandria Variable', system-ui, sans-serif;
   --fs-xs: 0.8125rem;
   --fs-s: 0.9375rem;
   --fs-m: 1.0625rem;
@@ -145,20 +146,6 @@ main:focus { outline: none; }
 .bottom-nav .create .ic-wrap { background: var(--teal); color: #fff; border-radius: var(--r-pill); width: 40px; height: 28px; display: grid; place-items: center; }
 
 .side-nav { display: none; }
-@media (min-width: 960px) {
-  .body { grid-template-columns: 248px minmax(0, 1fr); }
-  .bottom-nav { display: none; }
-  main { padding-bottom: var(--s7); max-width: 860px; padding-inline: var(--s6); padding-top: var(--s6); }
-  .side-nav {
-    display: flex; flex-direction: column; gap: 2px; position: sticky; top: var(--header-h);
-    height: calc(100dvh - var(--header-h)); padding: var(--s5) var(--s3); border-inline-end: 1px solid var(--line); background: var(--surface);
-  }
-  .side-nav a { display: flex; align-items: center; gap: var(--s3); padding: 10px var(--s3); border-radius: var(--r-m); color: var(--ink-2); text-decoration: none; font-weight: 500; }
-  .side-nav a:hover { background: var(--sunk); }
-  .side-nav a[aria-current='page'] { background: var(--teal-tint); color: var(--teal-strong); }
-  .side-nav .side-foot { margin-top: auto; font-size: var(--fs-xs); color: var(--ink-3); padding: var(--s3); }
-  .wide-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); align-items: start; }
-}
 
 .offline { background: var(--saffron-tint); color: var(--saffron-ink); padding: var(--s2) var(--s4); font-size: var(--fs-s); text-align: center; }
 
@@ -553,3 +540,83 @@ html[data-theme='dark'] .btn-primary { color: #04120f; }
 html[data-theme='dark'] .chip[aria-pressed='true'] { background: var(--teal-strong); border-color: var(--teal-strong); color: #04120f; }
 html[data-theme='dark'] .initial { color: var(--teal-strong); }
 html[data-theme='dark'] .count, html[data-theme='dark'] .dot { color: #04120f; background: #6fd39a; }
+
+
+/* =====================================================================
+   App layer: Jeran behaves like an installed app, not a web page.
+   One phone-width column everywhere; on larger screens it sits in a device-sized frame.
+   ===================================================================== */
+html { overscroll-behavior-y: none; }
+body { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; touch-action: manipulation; }
+button, .btn, .chip, .bottom-nav a, .list-row, .setting-row, .opp, .switch, .segmented button, .tabs a, .tabs button, .icon-btn, .brand {
+  -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+}
+.ugc, .kv dd, .email, input, textarea, .panel p, .facts .ugc { -webkit-user-select: text; user-select: text; }
+input, select, textarea { font-size: 16px; } /* stops iOS zooming into fields */
+
+/* press feedback: every tappable surface responds immediately */
+.btn:active:not(:disabled), .chip:active, .segmented button:active { transform: scale(0.97); }
+.list-row:active, .setting-row.nav:active, a.opp:active, .profile-card:active, .stat:active, .next-action:active { background: var(--sunk); }
+a.opp:active, .profile-card:active, .next-action:active { transform: scale(0.985); }
+.list-row, .setting-row, a.opp, .profile-card, .stat, .next-action, .btn, .chip { transition: background var(--t-fast), transform var(--t-fast); }
+
+/* large-title navigation bar */
+.app-header { height: 52px; background: rgb(255 255 255 / 0.86); -webkit-backdrop-filter: blur(20px) saturate(1.6); backdrop-filter: blur(20px) saturate(1.6); border-bottom: 1px solid var(--line); }
+.app-header::after { display: none; }
+.brand img { height: 28px; }
+.page-head { margin-bottom: var(--s5); align-items: flex-end; flex-wrap: wrap; }
+.page-head h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.025em; line-height: 1.12; }
+html[lang='ar'] .page-head h1 { font-size: 1.8rem; letter-spacing: 0; line-height: 1.35; }
+.page-head p { font-size: var(--fs-s); margin-top: 4px; }
+.page-head > .icon-btn:first-child { flex: none; width: 100%; justify-content: flex-start; margin: calc(-1 * var(--s2)) 0 0; height: 36px; color: var(--teal-strong); }
+.page-head > .icon-btn:first-child { width: auto; padding-inline-end: var(--s3); }
+h2 { font-weight: 650; }
+.section-head h2 { font-size: var(--fs-l); letter-spacing: -0.015em; }
+.section { margin-top: var(--s6); }
+
+/* tab changes animate like a push, never a page load */
+.screen { animation: screen-in 260ms var(--ease) both; }
+@keyframes screen-in { from { opacity: 0; transform: translateY(10px); } }
+
+/* one column, always: no desktop dashboards */
+.wide-2 { display: flex; flex-direction: column; gap: var(--s4); }
+.cards.two { grid-template-columns: 1fr; }
+.stat-grid, .stat-grid.four { grid-template-columns: repeat(2, 1fr); }
+.landing { min-height: calc(100dvh - 52px); }
+
+/* phones: header and tab bar stay pinned while content scrolls */
+.app-header { position: sticky; top: 0; padding-top: env(safe-area-inset-top); height: calc(52px + env(safe-area-inset-top)); }
+
+/* larger screens: the app is a phone-shaped frame on a quiet backdrop */
+@media (min-width: 600px) {
+  html { background: #cfdcd8; }
+  body { background: transparent; }
+  .shell {
+    position: relative; width: 430px; max-width: 100%; height: min(880px, calc(100dvh - 32px)); min-height: 0;
+    margin: 16px auto; border-radius: 44px; background: var(--paper); overflow: hidden;
+    box-shadow: 0 0 0 10px #10242a, 0 30px 70px rgb(12 52 64 / 0.35);
+    display: flex; flex-direction: column;
+  }
+  .app-header { flex: none; position: relative; padding-top: 0; height: 56px; }
+  .body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+  .body::-webkit-scrollbar { display: none; }
+  .bottom-nav { position: absolute; left: 12px; right: 12px; inset-inline: 12px; bottom: 12px; }
+  main { max-width: none; padding-inline: var(--s4); padding-top: var(--s4); padding-bottom: 104px; }
+  .toasts { position: absolute; bottom: 92px; }
+  .sticky-actions { bottom: 88px; }
+  .offline { flex: none; }
+  dialog.sheet { width: 430px; margin: auto; border-radius: var(--r-l); }
+}
+@media (min-width: 600px) and (max-height: 700px) { .shell { margin: 0 auto; height: 100dvh; border-radius: 0; box-shadow: none; } }
+html[data-theme='dark'] .app-header { background: rgb(18 38 43 / 0.86); }
+@media (min-width: 600px) { html[data-theme='dark'] { background: #050d10; } }
+
+/* Alexandria runs large and dark at the same weight: tune Arabic so it sits level with Instrument Sans */
+html[lang='ar'] body { font-size: 1rem; font-weight: 380; }
+html[lang='ar'] .list-row .title, html[lang='ar'] .opp h3 { font-weight: 520; }
+html[lang='ar'] .setting-row .title { font-weight: 450; }
+html[lang='ar'] .sub, html[lang='ar'] .meta, html[lang='ar'] .xs { line-height: 1.6; }
+html[lang='ar'] .btn, html[lang='ar'] .chip, html[lang='ar'] .segmented button { font-weight: 560; }
+html[lang='ar'] .bottom-nav a { font-size: 10.5px; font-weight: 500; }
+html[lang='ar'] h2, html[lang='ar'] h3 { font-weight: 600; }
+html[lang='ar'] .page-head h1 { font-weight: 640; }

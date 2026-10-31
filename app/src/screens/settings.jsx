@@ -3,6 +3,7 @@ import { api, patch, post } from '../api.js';
 import { readAppearance, saveAppearance } from '../appearance.js';
 import { useI18n } from '../i18n.js';
 import { Icon } from '../icons.jsx';
+import { MORE } from '../nav.js';
 import { Link, useRouter } from '../router.jsx';
 import {
   Button, ConfirmDialog, EmptyState, FormField, Load, Meta, PageHeader, Section, Sheet, StatusBadge,
@@ -102,6 +103,11 @@ export function Hub() {
       <Group>
         {sections.map(([k, icon, title, sub]) => <NavRow key={k} to={`/settings/${k}`} icon={icon} title={title} sub={sub} />)}
       </Group>
+      {(MORE[user.role] || []).length > 0 && (
+        <Group title={t('settings.more')}>
+          {MORE[user.role].map(([to, icon, label]) => <NavRow key={to} to={to} icon={icon} title={t(label)} />)}
+        </Group>
+      )}
       <SignOut />
     </>
   );

@@ -13,6 +13,7 @@ export const enSettings = {
   'settings.help': 'Help & about',
   'settings.helpSub': 'FAQs, support, guidelines, version',
   'settings.saved': 'Saved.',
+  'settings.more': 'More',
   'settings.profilePicture': 'Profile picture',
   'settings.avatarColour': 'Picture colour',
   'settings.avatarNote': 'Jeran shows your first initial instead of a photo, so no one can share a picture of a student. Pick a colour.',
