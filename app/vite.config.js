@@ -26,6 +26,6 @@ function stampServiceWorker() {
 export default defineConfig({
   plugins: [react(), stampServiceWorker()],
   define: { __APP_VERSION__: JSON.stringify(pkg.version), __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10)) },
-  server: { port: 5173, proxy: { '/api': 'http://localhost:8787' } },
+  server: { port: 5173, proxy: { '/api': process.env.API_PROXY_TARGET || 'http://localhost:8787' } },
   build: { sourcemap: false, chunkSizeWarningLimit: 700 },
 });
