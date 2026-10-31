@@ -844,6 +844,7 @@ const arSettings = {
   'settings.help': 'المساعدة وحول التطبيق',
   'settings.helpSub': 'الأسئلة الشائعة والدعم والإرشادات والإصدار',
   'settings.saved': 'تم الحفظ.',
+  'settings.more': 'المزيد',
   'settings.profilePicture': 'صورة الملف الشخصي',
   'settings.avatarColour': 'لون الصورة',
   'settings.avatarNote': 'يعرض جيران الحرف الأول من اسمك بدلًا من صورة شخصية، حتى لا يتمكن أحد من نشر صورة طالب. اختر لونًا.',

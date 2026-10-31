@@ -1441,7 +1441,7 @@ export function createApp({ dbPath = ':memory:', demo = false, secureCookies = f
     const accepts = String(req.headers['accept-encoding'] || '');
     if (compressible && /\bbr\b|gzip/.test(accepts)) {
       const enc = /\bbr\b/.test(accepts) ? 'br' : 'gzip';
-      const key = `${file}|${enc}|${file.endsWith('index.html') ? originOf(req) : ''}`;
+      const key = `${file}|${fs.statSync(file).mtimeMs}|${enc}|${file.endsWith('index.html') ? originOf(req) : ''}`; // mtime: a rebuild must never serve stale bytes
       let z = compressedCache.get(key);
       if (!z) {
         z = enc === 'br' ? zlib.brotliCompressSync(body) : zlib.gzipSync(body, { level: 9 });

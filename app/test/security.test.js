@@ -162,3 +162,22 @@ test('rate limiting on auth endpoints and session invalidation on suspension', a
   assert.ok(codes.includes(429), codes.join(','));
   assert.equal(codes[0], 401);
 });
+
+test('static server: rebuilt files are served fresh, unknown assets 404, app routes fall back to index.html', async (t) => {
+  const fs = await import('node:fs');
+  const os = await import('node:os');
+  const path = await import('node:path');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jeran-dist-'));
+  fs.mkdirSync(path.join(dir, 'assets'));
+  fs.writeFileSync(path.join(dir, 'index.html'), '<html><meta content="/og-image.png">v1</html>');
+  const h = await boot({ staticDir: dir });
+  t.after(() => { h.close(); fs.rmSync(dir, { recursive: true, force: true }); });
+  const get = (p) => fetch(h.base + p, { headers: { 'accept-encoding': 'br' } }).then(async (r) => ({ status: r.status, text: await r.text() }));
+  assert.match((await get('/')).text, /v1/);
+  assert.match((await get('/')).text, /http:\/\/127\.0\.0\.1:\d+\/og-image\.png/); // absolute share URL
+  await new Promise((r) => setTimeout(r, 20));
+  fs.writeFileSync(path.join(dir, 'index.html'), '<html>v2</html>');
+  assert.match((await get('/')).text, /v2/); // not the cached v1
+  assert.equal((await get('/assets/missing.css')).status, 404);
+  assert.match((await get('/student/hours')).text, /v2/);
+});
