@@ -2,6 +2,8 @@ import { id, now, tx } from './db.js';
 import { hashPassword, addDays, todayUAE, newLinkCode } from './lib.js';
 
 export const DEMO_PASSWORD = 'Demo#2026';
+// The fixed set of fictional people the demo can switch between (never self-registered users).
+export const DEMO_ACCOUNTS = ['yusuf.student', 'noor.student', 'maryam.student', 'khalid.guardian', 'fatima.guardian', 'huda.resident', 'rashid.resident', 'new.resident', 'layla.mod', 'omar.mod', 'admin'].map((n) => `${n}@team26.demo`);
 
 /** Fictional, repeatable demo data. Wipes everything first. */
 export function seed(db) {

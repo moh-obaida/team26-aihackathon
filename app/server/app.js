@@ -8,6 +8,7 @@ import {
   sha256, newToken, newLinkCode, hoursBetween, csvCell, makeLimiter,
 } from './lib.js';
 import { safeguardCheck, MATERIAL_FIELDS } from './safeguard.js';
+import { DEMO_ACCOUNTS } from './seed.js';
 
 const CATEGORIES = ['cleanup', 'gardening', 'seniors', 'reading', 'pets', 'events', 'tutoring', 'other'];
 const REPORT_CATS = ['unsafe', 'suspicious', 'misrepresentation', 'privacy', 'harassment', 'inappropriate', 'other'];
@@ -28,6 +29,7 @@ export function createApp({ dbPath = ':memory:', demo = false, secureCookies = f
   const run = (sql, ...a) => db.prepare(sql).run(...a);
   const authLimiter = makeLimiter(authLimit, 60_000);
   const writeLimiter = makeLimiter(300, 60_000);
+  const demoLimiter = makeLimiter(120, 60_000);
 
   // ---------- shared helpers ----------
   const audit = (actor, action, type, tid, meta = {}) =>
@@ -178,12 +180,24 @@ export function createApp({ dbPath = ':memory:', demo = false, secureCookies = f
 
   route('GET', '/api/auth/me', null, ({ user }) => ({ user: user ? sanitizeUser(user) : null }));
 
+  // Demo mode only: list the fictional people and become one of them with a tap (no password). 404 when demo is off.
   route('GET', '/api/demo-accounts', null, () => {
     if (!demo) throw notFound();
-    return {
-      password: 'Demo#2026',
-      accounts: q("SELECT email, role, display_name FROM users WHERE email LIKE '%@team26.demo' ORDER BY role, email"),
-    };
+    const order = ['student', 'guardian', 'resident', 'moderator', 'admin'];
+    const rows = q(`SELECT email, role, display_name, lang FROM users WHERE email IN (${DEMO_ACCOUNTS.map(() => '?').join(',')})`, ...DEMO_ACCOUNTS);
+    rows.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role) || DEMO_ACCOUNTS.indexOf(a.email) - DEMO_ACCOUNTS.indexOf(b.email));
+    return { accounts: rows };
+  });
+  route('POST', '/api/demo/enter', null, ({ body, ip, setSession }) => {
+    if (!demo) throw notFound();
+    if (!demoLimiter('demo:' + ip)) throw new HttpError(429, 'rate_limited');
+    const { email } = validate(body, { email: { t: 'str', max: 120 } });
+    if (!DEMO_ACCOUNTS.includes(email.toLowerCase())) throw notFound();
+    const u = q1('SELECT * FROM users WHERE email=?', email.toLowerCase());
+    if (!u) throw notFound();
+    if (u.status !== 'active') throw forbidden('account_suspended');
+    setSession(u.id);
+    return { user: sanitizeUser(u) };
   });
 
   // ================= PROFILE / NOTIFICATIONS =================

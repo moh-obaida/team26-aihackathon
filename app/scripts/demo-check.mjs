@@ -39,22 +39,17 @@ class Session {
   }
   async go(path) { await this.page.goto(path, { waitUntil: 'networkidle' }); }
   async shot(name) { if (SHOTS) { fs.mkdirSync(SHOTS, { recursive: true }); await this.page.screenshot({ path: `${SHOTS}/${this.tag}-${name}.png` }); } }
+  // Signs in through the API so the workflow steps do not depend on how the entry screen looks (the picker has its own checks).
   async login(user) {
     await this.ctx.clearCookies();
-    await this.go('/login');
-    await this.page.getByLabel(await this.t('auth.email'), { exact: true }).fill(`${user}@team26.demo`);
-    await this.page.getByLabel(await this.t('auth.password'), { exact: true }).fill(PASSWORD);
-    await this.page.locator('form').getByRole('button', { name: await this.t('auth.login') }).click();
-    // the server limits sign-ins per address (20/min); a long run can hit it, so wait it out once rather than fail
-    const outcome = await Promise.race([
-      this.page.waitForURL((u) => !u.pathname.startsWith('/login')).then(() => 'in'),
-      this.page.locator('.form-error').waitFor().then(() => 'error'),
-    ]);
-    if (outcome === 'error') {
+    for (let i = 0; i < 3; i++) {
+      const r = await this.ctx.request.post('/api/auth/login', { headers: { 'x-requested-with': 'team26' }, data: { email: `${user}@team26.demo`, password: PASSWORD } });
+      if (r.ok()) break;
+      if (r.status() !== 429) throw new Error(`sign-in as ${user} failed: ${r.status()}`);
       await this.page.waitForTimeout(31000);
-      await this.page.locator('form').getByRole('button', { name: await this.t('auth.login') }).click();
-      await this.page.waitForURL((u) => !u.pathname.startsWith('/login'));
     }
+    await this.go('/');
+    await this.page.waitForURL((u) => u.pathname !== '/' && !u.pathname.startsWith('/login'));
     await this.page.waitForLoadState('networkidle');
   }
   btn(name, scope) { return (scope || this.page).getByRole('button', { name, exact: true }); }
@@ -264,9 +259,7 @@ async function pwaChecks(browser) {
   await d.open();
   await d.go('/guardian/consents');
   check('signed-out deep link goes to sign-in and remembers the destination', new URL(d.page.url()).pathname === '/login' && new URL(d.page.url()).searchParams.get('next') === '/guardian/consents');
-  await d.page.getByLabel(en['auth.email'], { exact: true }).fill('khalid.guardian@team26.demo');
-  await d.page.getByLabel(en['auth.password'], { exact: true }).fill(PASSWORD);
-  await d.page.locator('form').getByRole('button', { name: en['auth.login'] }).click();
+  await d.page.getByRole('button', { name: /Khalid/ }).click();
   await d.page.waitForURL('**/guardian/consents');
   check('after sign-in the deep link opens the requested page', true);
   await d.page.reload({ waitUntil: 'networkidle' });
@@ -276,6 +269,34 @@ async function pwaChecks(browser) {
   const wrongRole = await d.go('/admin').then(() => d.page.locator('main').innerText());
   check('a route for another role is refused, not shown', wrongRole.includes(await d.t('route.deniedTitle')));
   await d.ctx.close();
+}
+
+async function demoEntryChecks(browser) {
+  const s = new Session(browser, 'iphone', 'en', 'entry');
+  await s.open();
+  await s.go('/');
+  check('demo start screen offers "Try the demo" (no sign-in button)', await s.page.getByRole('link', { name: en['demo.enter'] }).isVisible() && !(await s.page.getByRole('link', { name: en['auth.login'], exact: true }).count()));
+  await s.page.getByRole('link', { name: en['demo.enter'] }).click();
+  await s.page.waitForURL('**/login');
+  check('/login shows who to be, with no email or password fields', !(await s.page.locator('input[type=password], input[type=email]').count()) && await s.page.getByText(en['demo.pickTitle']).isVisible());
+  await s.shot('picker');
+  await s.page.getByRole('button', { name: /Yusuf/ }).click();
+  await s.page.waitForURL('**/student');
+  check('one tap enters the app as that person', await s.page.locator('.hero h1').innerText().then((t) => /Yusuf/.test(t)));
+  const t0 = Date.now();
+  await s.page.getByRole('button', { name: en['demo.switchLabel'] }).click();
+  await s.page.locator('dialog[open]').waitFor();
+  await s.shot('switcher');
+  await s.page.locator('dialog[open]').getByRole('button', { name: /Khalid/ }).click();
+  await s.page.waitForURL('**/guardian');
+  await s.page.locator('.hero h1', { hasText: /Khalid/ }).waitFor();
+  check(`switching account from inside the app lands on the new person's home (${Date.now() - t0} ms)`, true);
+  await s.page.getByRole('button', { name: await s.t('demo.switchLabel') }).click();
+  await s.page.locator('dialog[open]').getByRole('button', { name: /Yusuf/ }).click();
+  await s.page.waitForURL('**/student');
+  await s.page.locator('.hero h1', { hasText: /Yusuf/ }).waitFor();
+  check('switching back shows that person\'s own data (screen reloads for the new user)', true);
+  await s.ctx.close();
 }
 
 async function motionChecks(browser) {
@@ -357,6 +378,7 @@ const browser = await chromium.launch({ executablePath: CHROMIUM });
 try {
   await demoWorkflow(browser, 'iphone', 'en');
   await demoWorkflow(browser, 'pixel', 'ar');
+  await demoEntryChecks(browser);
   await pwaChecks(browser);
   await motionChecks(browser);
 } finally { await browser.close(); }

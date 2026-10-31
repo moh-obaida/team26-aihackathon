@@ -4,8 +4,8 @@ import { useI18n } from '../i18n.js';
 import { Icon, CATEGORY_ICON } from '../icons.jsx';
 import { Link, useRouter } from '../router.jsx';
 import {
-  Button, CommunityCard, ConfirmDialog, EmptyState, Fact, FormField, Load, OpportunityCard, PageHeader, SearchField,
-  Section, StatusBadge, useAction, useApi, useAuth, useToast, Meta,
+  Button, CommunityCard, ConfirmDialog, DemoPeople, EmptyState, Fact, FormField, Load, LoadingState, OpportunityCard, PageHeader, SearchField,
+  Section, StatusBadge, useAction, useApi, useAuth, useDemoEnter, useToast, Meta,
 } from '../ui.jsx';
 import { ReportSheet } from './shared.jsx';
 
@@ -201,25 +201,6 @@ export function CommunityDetail({ params }) {
   );
 }
 
-function DemoAccounts({ onPick }) {
-  const { t } = useI18n();
-  const q = useApi('/demo-accounts');
-  if (q.error || !q.data) return null;
-  return (
-    <details className="panel">
-      <summary style={{ cursor: 'pointer', fontWeight: 600 }}>{t('auth.demo')}</summary>
-      <p className="xs muted" style={{ margin: '8px 0' }}>{t('auth.demoHint', { pw: q.data.password })}</p>
-      <div className="demo-list">
-        {q.data.accounts.map((a) => (
-          <button key={a.email} type="button" className="btn btn-secondary btn-sm" style={{ justifyContent: 'space-between' }} onClick={() => onPick(a.email, q.data.password)}>
-            <span>{a.display_name}</span><span className="badge plain">{t('role.' + a.role)}</span>
-          </button>
-        ))}
-      </div>
-    </details>
-  );
-}
-
 function LegalLinks() {
   const { t } = useI18n();
   return (
@@ -244,6 +225,7 @@ function LandingLogo({ intro }) {
 /** First screen for someone who is not signed in. */
 export function Start() {
   const { t, lang, setLang } = useI18n();
+  const demo = !!useApi('/demo-accounts').data;
   return (
     <div className="start-screen">
       <div className="lang-seg" role="radiogroup" aria-label={t('profile.language')}>
@@ -263,8 +245,19 @@ export function Start() {
           ))}
         </ul>
         <div className="stack">
-          <Link to="/register" className="btn btn-signal btn-block start-cta">{t('start.cta')}<Icon name="chev" size={18} /></Link>
-          <Link to="/login" className="btn btn-secondary btn-block start-cta">{t('auth.login')}</Link>
+          {demo
+            ? (
+              <>
+                <Link to="/login" className="btn btn-signal btn-block start-cta">{t('demo.enter')}<Icon name="chev" size={18} /></Link>
+                <Link to="/register" className="btn btn-secondary btn-block start-cta">{t('auth.signup')}</Link>
+              </>
+            )
+            : (
+              <>
+                <Link to="/register" className="btn btn-signal btn-block start-cta">{t('start.cta')}<Icon name="chev" size={18} /></Link>
+                <Link to="/login" className="btn btn-secondary btn-block start-cta">{t('auth.login')}</Link>
+              </>
+            )}
         </div>
         <LegalLinks />
       </div>
@@ -272,8 +265,35 @@ export function Start() {
   );
 }
 
-/** The app's first screen: sign in, then everything else opens up. */
+/** Demo mode: no credentials, just pick who to be. Otherwise the normal sign-in form. */
 export function Login() {
+  const demo = useApi('/demo-accounts');
+  if (demo.loading && !demo.data) return <LoadingState rows={2} />;
+  return demo.data ? <DemoEntry accounts={demo.data.accounts} /> : <PasswordLogin />;
+}
+
+function DemoEntry({ accounts }) {
+  const { t } = useI18n();
+  const { search } = useRouter();
+  const next = new URLSearchParams(search).get('next');
+  const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : null;
+  const d = useDemoEnter();
+  return (
+    <div className="landing" style={{ justifyContent: 'flex-start' }}>
+      <div className="row"><Link to="/" className="icon-btn" aria-label={t('common.back')} style={{ color: 'var(--teal-strong)' }}><Icon name="back" /></Link></div>
+      <div className="stack">
+        <h1>{t('demo.pickTitle')}</h1>
+        <p className="small muted">{t('demo.pickBody')}</p>
+      </div>
+      {d.error && <p className="form-error" role="alert">{d.error}</p>}
+      <DemoPeople accounts={accounts} onPick={(email) => d.enter(email, safeNext)} busyEmail={d.who} />
+      <p className="small" style={{ textAlign: 'center' }}><Link to="/register">{t('demo.newAccount')}</Link></p>
+      <LegalLinks />
+    </div>
+  );
+}
+
+function PasswordLogin() {
   const { t, lang } = useI18n();
   const { setUser } = useAuth();
   const { navigate, search } = useRouter();
@@ -306,7 +326,6 @@ export function Login() {
         <div className="divider">{t('auth.noAccount')}</div>
         <Link to="/register" className="btn btn-secondary btn-block">{t('auth.signup')}</Link>
       </form>
-      <DemoAccounts onPick={(em, pw) => { setEmail(em); setPassword(pw); submit(em, pw); }} />
       <p className="xs muted" style={{ textAlign: 'center' }}>{t('auth.demoNotice')}</p>
       <LegalLinks />
     </div>

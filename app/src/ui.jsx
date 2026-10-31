@@ -1,8 +1,8 @@
 import { createContext, Fragment, useCallback, useContext, useEffect, useId, useRef, useState } from 'react';
-import { api } from './api.js';
+import { api, post } from './api.js';
 import { useI18n } from './i18n.js';
 import { Icon, Seal, Skyline, CATEGORY_ICON, CATEGORY_HUE } from './icons.jsx';
-import { Link } from './router.jsx';
+import { Link, useRouter } from './router.jsx';
 
 // ---------- contexts ----------
 export const AuthCtx = createContext({ user: null, setUser: () => {}, refresh: () => {} });
@@ -229,6 +229,55 @@ export function ErrorState({ error, onRetry }) {
 }
 
 /** Shown instead of the app when it cannot reach the server on launch. The session is kept: this is not a sign-out. */
+const DEMO_HOME = { student: '/student', resident: '/resident', guardian: '/guardian', moderator: '/moderator', admin: '/admin' };
+
+/** Demo mode only: become a fictional person with one tap (no password). `go` runs after the session is set. */
+export function useDemoEnter(go) {
+  const { setUser } = useAuth();
+  const { navigate } = useRouter();
+  const act = useAction();
+  const [who, setWho] = useState(null);
+  const enter = async (email, to) => {
+    setWho(email);
+    const r = await act.run(() => post('/demo/enter', { email }));
+    setWho(null);
+    if (!r) return;
+    setUser(r.user);
+    go?.(r.user);
+    navigate(to || DEMO_HOME[r.user.role], { replace: true });
+  };
+  return { enter, busy: act.busy, who, error: act.error };
+}
+
+/** The demo's fictional people grouped by role. Used by the entry screen and by the in-app switcher. */
+export function DemoPeople({ accounts, current, onPick, busyEmail }) {
+  const { t } = useI18n();
+  const roles = [...new Set(accounts.map((a) => a.role))];
+  return (
+    <div className="demo-people">
+      {roles.map((role) => (
+        <section key={role} aria-label={t('role.' + role)}>
+          <h2 className="demo-role">{t('role.' + role)}</h2>
+          <ul className="demo-list">
+            {accounts.filter((a) => a.role === role).map((a) => {
+              const here = a.email === current;
+              return (
+                <li key={a.email}>
+                  <button type="button" className="demo-person" aria-current={here ? 'true' : undefined} disabled={!!busyEmail} onClick={() => onPick(a.email)}>
+                    <Avatar user={{ display_name: a.display_name, prefs: {} }} size={40} />
+                    <span className="grow"><bdi>{a.display_name}</bdi></span>
+                    {here ? <span className="badge ok plain">{t('demo.you')}</span> : busyEmail === a.email ? <span className="spin" aria-hidden="true" /> : <Icon name="chev" size={18} className="chev" />}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 export function ConnectionState({ onRetry, busy }) {
   const { t } = useI18n();
   return (

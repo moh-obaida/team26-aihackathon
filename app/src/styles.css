@@ -902,3 +902,13 @@ dialog.sheet[data-closing]::backdrop { animation: fade-out 230ms ease-in forward
 .switch[aria-checked='true']:active .knob { inset-inline-start: 16px; }
 .segmented button, .tabs a, .tabs button, .chip { transition: background 220ms var(--ease-ios), color 220ms, box-shadow 220ms, transform 460ms var(--spring); }
 .skeleton, .skel { animation-duration: 1.4s; }
+
+/* demo: pick who to be */
+.demo-people { display: flex; flex-direction: column; gap: var(--s4); }
+.demo-role { font-size: var(--fs-s); font-weight: 600; color: var(--ink-3); margin: 0 var(--s1) var(--s2); }
+.demo-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
+.demo-person { width: 100%; display: flex; align-items: center; gap: var(--s3); min-height: 56px; padding: var(--s2) var(--s3); text-align: start; cursor: pointer; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-m); font-weight: 600; transition: transform 460ms var(--spring), background var(--t-fast), border-color var(--t-fast); }
+.demo-person:active:not(:disabled) { transform: scale(0.97); transition-duration: 80ms; }
+.demo-person[aria-current='true'] { border-color: var(--teal); background: var(--teal-tint); }
+.demo-person:disabled { opacity: 0.6; }
+.demo-person .spin { width: 16px; height: 16px; border: 2px solid currentColor; border-inline-end-color: transparent; border-radius: 50%; animation: spin 700ms linear infinite; }

@@ -3,7 +3,7 @@ import { api, patch } from './api.js';
 import { dicts, I18nContext, loadLanguage, makeFormat, makeT } from './i18n.js';
 import { Icon } from './icons.jsx';
 import { Link, matchPath, RouterProvider, useRouter } from './router.jsx';
-import { AuthCtx, Avatar, ConnectionState, EmptyState, LoadingState, ToastHost, useApi } from './ui.jsx';
+import { AuthCtx, Avatar, ConnectionState, DemoPeople, EmptyState, LoadingState, Sheet, ToastHost, useApi, useDemoEnter } from './ui.jsx';
 import * as Pub from './screens/public.jsx';
 import * as Sh from './screens/shared.jsx';
 
@@ -236,7 +236,11 @@ function ShellInner({ path, navigate }) {
   // Move focus to main content on navigation so screen readers announce the new page.
   useEffect(() => { mainRef.current?.focus({ preventScroll: true }); if (scrollerRef.current) scrollerRef.current.scrollTop = 0; }, [path]);
 
-  const notif = useApi(user ? '/notifications' : null, [path]);
+  const notif = useApi(user ? '/notifications' : null, [path, user?.id]);
+  // demo mode: the fictional people, so anyone can be switched to in one tap
+  const demo = useApi('/demo-accounts');
+  const [switchOpen, setSwitchOpen] = useState(false);
+  const sw = useDemoEnter(() => setSwitchOpen(false));
   const unread = notif.data?.unread || 0;
 
   // Which way the screen moved decides how it animates: deeper = push in, shallower = pop back, same level = tab change.
@@ -293,7 +297,12 @@ function ShellInner({ path, navigate }) {
           <button type="button" lang="en" aria-pressed={lang === 'en'} onClick={() => lang !== 'en' && setLang('en')}>EN</button>
           <button type="button" lang="ar" aria-pressed={lang === 'ar'} onClick={() => lang !== 'ar' && setLang('ar')}>العربية</button>
         </div>
-        {user && !nav.some(([to]) => /\/settings$/.test(to)) && (
+        {user && demo.data && (
+          <button type="button" className="icon-btn avatar-btn" onClick={() => setSwitchOpen(true)} aria-label={t('demo.switchLabel')} aria-haspopup="dialog">
+            <Avatar user={user} size={32} />
+          </button>
+        )}
+        {user && !demo.data && !nav.some(([to]) => /\/settings$/.test(to)) && (
           <Link to="/settings" className="icon-btn avatar-btn" aria-label={t('nav.settings')}>
             <Avatar user={user} size={32} />
           </Link>
@@ -305,10 +314,19 @@ function ShellInner({ path, navigate }) {
           </Link>
         )}
       </header>
+      {demo.data && (
+        <Sheet open={switchOpen} onClose={() => setSwitchOpen(false)} title={t('demo.switchTitle')}>
+          <p className="small muted">{t('demo.pickBody')}</p>
+          {sw.error && <p className="form-error" role="alert">{sw.error}</p>}
+          <DemoPeople accounts={demo.data.accounts} current={user?.email} busyEmail={sw.who}
+            onPick={(email) => (email === user?.email ? setSwitchOpen(false) : sw.enter(email))} />
+          <Link to="/settings" className="btn btn-secondary" onClick={() => setSwitchOpen(false)}>{t('nav.settings')}</Link>
+        </Sheet>
+      )}
       {!online && <div className="offline" role="status">{t('common.offline')}</div>}
       <div className="body" ref={scrollerRef}>
         <main id="main" ref={mainRef} tabIndex={-1} className={`${showNav ? '' : 'no-nav'} ${startScreen ? 'start' : ''}`}>
-          <div className={`screen ${navDir.current}`} key={path}>{content}</div>
+          <div className={`screen ${navDir.current}`} key={`${path}|${user?.id || ""}`}>{content}</div>
         </main>
       </div>
       {showNav && (
