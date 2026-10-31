@@ -13,8 +13,9 @@ const { server, db } = createApp({
   dbPath,
   demo: process.env.DEMO === '1',
   secureCookies: process.env.SECURE_COOKIES === '1',
+  trustProxy: process.env.TRUST_PROXY === '1',
   staticDir: fs.existsSync(dist) ? dist : null,
 });
 if (!db.prepare('SELECT 1 FROM users LIMIT 1').get() && process.env.DEMO === '1') seed(db);
 const port = Number(process.env.PORT || 8787);
-server.listen(port, () => console.log(`Team 26 API on http://localhost:${port}${fs.existsSync(dist) ? ' (serving built app)' : ''}`));
+server.listen(port, process.env.HOST || undefined, () => console.log(`Team 26 API on http://localhost:${port}${fs.existsSync(dist) ? ' (serving built app)' : ''}`));

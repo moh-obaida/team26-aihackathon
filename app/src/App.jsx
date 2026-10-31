@@ -3,7 +3,7 @@ import { api, patch } from './api.js';
 import { dicts, I18nContext, loadLanguage, makeFormat, makeT } from './i18n.js';
 import { Icon } from './icons.jsx';
 import { Link, matchPath, RouterProvider, useRouter } from './router.jsx';
-import { AuthCtx, Avatar, EmptyState, LoadingState, ToastHost, useApi } from './ui.jsx';
+import { AuthCtx, Avatar, ConnectionState, EmptyState, LoadingState, ToastHost, useApi } from './ui.jsx';
 import * as Pub from './screens/public.jsx';
 import * as Sh from './screens/shared.jsx';
 
@@ -149,7 +149,11 @@ function Root() {
     try { localStorage.setItem('jeran.lang', lang); localStorage.removeItem('jiran.lang'); } catch { /* storage unavailable */ }
   }, [lang]);
 
-  const refresh = useCallback(() => api('/auth/me').then((r) => setUser(r.user)).catch(() => setUser(null)), []);
+  // A dropped connection or a restarting server is not a sign-out: keep what we know and say so.
+  const [unreachable, setUnreachable] = useState(false);
+  const refresh = useCallback(() => api('/auth/me')
+    .then((r) => { setUnreachable(false); setUser(r.user); })
+    .catch((e) => { if (e?.code === 'network' || e?.status >= 500) setUnreachable(true); else { setUnreachable(false); setUser(null); } }), []);
   useEffect(() => { refresh(); }, [refresh]);
 
   const setLang = useCallback((l) => {
@@ -165,7 +169,7 @@ function Root() {
 
   return (
     <I18nContext.Provider value={{ ...value, setLang }}>
-      <AuthCtx.Provider value={{ user, setUser: onAuth, refresh }}>
+      <AuthCtx.Provider value={{ user, setUser: onAuth, refresh, unreachable }}>
         <Shell />
       </AuthCtx.Provider>
     </I18nContext.Provider>
@@ -192,12 +196,22 @@ function Shell() {
 
 function ShellInner({ path, navigate }) {
   const auth = useAuthValue();
-  const { user } = auth;
+  const { user, unreachable, refresh } = auth;
   const i18n = useI18nValue();
   const { t, lang, setLang } = i18n;
   const online = useOnline();
   const mainRef = useRef(null);
   const scrollerRef = useRef(null);
+  const [retrying, setRetrying] = useState(false);
+  const retry = useCallback(() => { setRetrying(true); Promise.resolve(refresh()).finally(() => setRetrying(false)); }, [refresh]);
+  // while the app cannot reach the server on launch, try again when the network returns and every few seconds
+  const waiting = user === undefined && unreachable;
+  useEffect(() => {
+    if (!waiting) return undefined;
+    const id = setInterval(() => refresh(), 8000);
+    window.addEventListener('online', retry);
+    return () => { clearInterval(id); window.removeEventListener('online', retry); };
+  }, [waiting, refresh, retry]);
 
   let match = null;
   for (const [pattern, Comp, access] of ROUTES) {
@@ -234,7 +248,8 @@ function ShellInner({ path, navigate }) {
   };
 
   let content;
-  if (user === undefined || redirect || needLogin) content = <LoadingState rows={2} />;
+  if (waiting) content = <ConnectionState onRetry={retry} busy={retrying} />;
+  else if (user === undefined || redirect || needLogin) content = <LoadingState rows={2} />;
   else if (!match) content = <Pub.NotFound />;
   else if (Array.isArray(match.access) && !match.access.includes(user.role)) {
     content = (

@@ -12,7 +12,8 @@
     "seed": "node server/seed-cli.js",
     "build": "vite build",
     "start": "DEMO=1 node server/index.js",
-    "test": "node --test test/"
+    "test": "node --test test/",
+    "demo:check": "node scripts/demo-check.mjs"
   },
   "dependencies": {
     "@fontsource-variable/alexandria": "^5.3.0",

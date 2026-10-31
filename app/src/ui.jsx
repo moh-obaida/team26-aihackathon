@@ -47,6 +47,13 @@ export function useApi(path, deps = []) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path, tick, ...deps]);
   const reload = useCallback(() => setTick((n) => n + 1), []);
+  // a screen that failed because the connection dropped refreshes itself when the connection returns
+  const lost = state.error?.code === 'network';
+  useEffect(() => {
+    if (!lost) return undefined;
+    window.addEventListener('online', reload);
+    return () => window.removeEventListener('online', reload);
+  }, [lost, reload]);
   return { ...state, reload };
 }
 
@@ -188,6 +195,19 @@ export function ErrorState({ error, onRetry }) {
         <p>{errorText(t, error)}</p>
         {onRetry && <div><button type="button" className="btn btn-secondary btn-sm" onClick={onRetry}>{t('common.retry')}</button></div>}
       </div>
+    </div>
+  );
+}
+
+/** Shown instead of the app when it cannot reach the server on launch. The session is kept: this is not a sign-out. */
+export function ConnectionState({ onRetry, busy }) {
+  const { t } = useI18n();
+  return (
+    <div className="empty connection" role="alert">
+      <div className="ic"><Icon name="offline" size={28} /></div>
+      <h1>{t('conn.title')}</h1>
+      <p>{t('conn.body')}</p>
+      <Button onClick={onRetry} busy={busy}>{t('common.retry')}</Button>
     </div>
   );
 }

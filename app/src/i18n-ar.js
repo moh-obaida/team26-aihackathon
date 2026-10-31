@@ -968,6 +968,8 @@ const arSettings = {
   'fld.wrong_password': 'كلمة المرور غير صحيحة.',
   // ---- home / app-screen layer ----
   'common.allCommunities': 'كل المجتمعات',
+  'conn.title': 'تعذّر الوصول إلى جيران',
+  'conn.body': 'لا يمكن الوصول إلى جيران الآن. تحقق من اتصالك بالإنترنت. ما زلت مسجّل الدخول، وسيعيد جيران المحاولة تلقائيًا.',
   'home.greet.morning': 'صباح الخير',
   'home.greet.afternoon': 'طاب يومك',
   'home.greet.evening': 'مساء الخير',

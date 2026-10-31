@@ -21,7 +21,7 @@ const MIME = {
   '.woff': 'font/woff', '.png': 'image/png', '.ico': 'image/x-icon',
 };
 
-export function createApp({ dbPath = ':memory:', demo = false, secureCookies = false, staticDir = null, authLimit = 20 } = {}) {
+export function createApp({ dbPath = ':memory:', demo = false, secureCookies = false, staticDir = null, authLimit = 20, trustProxy = false } = {}) {
   const db = openDb(dbPath);
   const q = (sql, ...a) => db.prepare(sql).all(...a);
   const q1 = (sql, ...a) => db.prepare(sql).get(...a);
@@ -1343,12 +1343,25 @@ export function createApp({ dbPath = ':memory:', demo = false, secureCookies = f
   }
 
   const SEC_HEADERS = {
+    // HTTPS-only deployments: tell browsers to refuse plain HTTP for this host (6 months, no subdomains, no preload).
+    ...(secureCookies ? { 'Strict-Transport-Security': 'max-age=15552000' } : {}),
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
     'Referrer-Policy': 'no-referrer',
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
     'Content-Security-Policy': "default-src 'self'; img-src 'self' data:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
   };
+
+  // Behind a TLS-terminating proxy every request arrives from the proxy's address, which would put the whole room
+  // in one rate-limit bucket. With TRUST_PROXY=1 we use the address the single trusted proxy appended (the last
+  // X-Forwarded-For entry), which a client cannot forge. Only enable it when exactly one proxy sits in front.
+  function clientIp(req) {
+    if (trustProxy) {
+      const xff = String(req.headers['x-forwarded-for'] || '').split(',').map((x) => x.trim()).filter(Boolean);
+      if (xff.length) return xff[xff.length - 1];
+    }
+    return req.socket.remoteAddress || 'x';
+  }
 
   function send(res, status, payload, extra = {}) {
     const body = typeof payload === 'string' ? payload : JSON.stringify(payload);
@@ -1357,7 +1370,7 @@ export function createApp({ dbPath = ':memory:', demo = false, secureCookies = f
   }
 
   async function handleApi(req, res, url) {
-    const ip = req.socket.remoteAddress || 'x';
+    const ip = clientIp(req);
     const method = req.method;
     let matched = null;
     let pathAllowed = false;
@@ -1472,6 +1485,11 @@ export function createApp({ dbPath = ':memory:', demo = false, secureCookies = f
 
   const server = http.createServer((req, res) => {
     const url = new URL(req.url, 'http://localhost');
+    // Plain HTTP that reached us through the proxy is sent to HTTPS (the proxy marks it; direct/health-check calls are untouched).
+    if (secureCookies && req.headers['x-forwarded-proto'] === 'http' && req.headers.host) {
+      res.writeHead(308, { Location: `https://${req.headers.host}${req.url}`, ...SEC_HEADERS });
+      return res.end();
+    }
     if (url.pathname === '/robots.txt' || url.pathname === '/sitemap.xml') crawlerFiles(req, res, url);
     else if (url.pathname.startsWith('/api/')) handleApi(req, res, url);
     else serveStatic(req, res, url);

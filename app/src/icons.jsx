@@ -45,6 +45,7 @@ const P = {
   filter: 'M4 5.5h16l-6 7v6l-4 2v-8z',
   chart: 'M4.5 20h15M7 16.5V11M12 16.5V6.5M17 16.5V13.5',
   arrow: 'M5 12h14M13.5 6.5 19 12l-5.5 5.5',
+  offline: 'M3 9.5a14 14 0 0 1 4-2.6M21 9.5a14 14 0 0 0-8.5-4M6.3 13a9 9 0 0 1 3-1.9M17.7 13a9 9 0 0 0-4.4-2.2M9.6 16.4a4 4 0 0 1 4.8 0M12 19.6h.01M4 4l16 16',
 };
 const MIRRORED = new Set(['back', 'chev', 'logout', 'arrow']);
 

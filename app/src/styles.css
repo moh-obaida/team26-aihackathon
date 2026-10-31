@@ -102,7 +102,7 @@ img, svg { display: block; }
 [dir='rtl'] .mirror { transform: scaleX(-1); }
 
 /* ---------- shell ---------- */
-.shell { min-height: 100dvh; display: grid; grid-template-rows: var(--header-h) auto 1fr; grid-template-columns: minmax(0, 1fr); }
+.shell { min-height: 100dvh; display: grid; grid-template-rows: auto auto 1fr; grid-template-columns: minmax(0, 1fr); } /* header grows by the notch inset, so its row must size to it */
 .app-header {
   position: sticky; top: 0; z-index: 20; height: var(--header-h);
   background: var(--surface); color: var(--ink);
@@ -596,7 +596,7 @@ h2 { font-weight: 650; }
   .app-header { flex: none; position: relative; padding-top: 0; height: 56px; }
   .body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
   .body::-webkit-scrollbar { display: none; }
-  .bottom-nav { position: absolute; left: 12px; right: 12px; inset-inline: 12px; bottom: 12px; }
+  .bottom-nav { position: absolute; left: 12px; right: 12px; inset-inline: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); }
   main { max-width: none; padding-inline: var(--s4); padding-top: var(--s4); padding-bottom: 104px; }
   .toasts { position: absolute; bottom: 92px; }
   .sticky-actions { bottom: 88px; }
@@ -763,3 +763,6 @@ html[data-theme='dark'] .standing.wait .standing-ic, html[data-theme='dark'] .st
 .chip-quiet[aria-pressed='true'], html[data-theme='dark'] .chip-quiet[aria-pressed='true'] { background: var(--teal-tint); border-color: var(--teal); color: var(--teal-strong); }
 
 .quiet-empty { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; }
+
+.connection { min-height: 60dvh; justify-content: center; }
+.connection h1 { font-size: var(--fs-l); }

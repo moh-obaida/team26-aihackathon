@@ -291,6 +291,8 @@ export const enExtra = {
   'admin.adminProtected': "Administrator accounts cannot be suspended from here.",
   // ---- home / app-screen layer ----
   'common.allCommunities': 'All communities',
+  'conn.title': "Can't reach Jeran",
+  'conn.body': "Jeran can't be reached right now. Check your internet connection. You are still signed in, and Jeran will try again by itself.",
   'home.greet.morning': 'Good morning',
   'home.greet.afternoon': 'Good afternoon',
   'home.greet.evening': 'Good evening',
