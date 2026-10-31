@@ -1,5 +1,12 @@
 // Route-map, page and admin strings. Merged into the main dictionaries in i18n.js.
 export const enExtra = {
+  'start.title': 'Stronger neighbours, brighter UAE',
+  'start.body': 'A community volunteering app connecting students and neighbourhoods across the UAE.',
+  'start.sceneAlt': 'A student and a young volunteer talking with an older neighbour in a Dubai community, with the skyline behind them',
+  'start.f1': 'Verified communities',
+  'start.f2': 'Safe volunteering',
+  'start.f3': 'English and Arabic',
+  'start.cta': 'Get started',
   'nav.welcome': 'Welcome',
   'nav.explore': 'Explore',
   'nav.create': 'Create',

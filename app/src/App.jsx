@@ -33,7 +33,7 @@ const AUTH = 'auth';
 // [pattern, component, access]. access: null = public, AUTH = any signed-in user, [roles].
 export const ROUTES = [
   // The app opens on sign-in; everything else is behind it (legal pages and help stay readable).
-  ['/', Pub.Login, null],
+  ['/', Pub.Start, null],
   ['/explore', Pub.Explore, AUTH],
   ['/opportunities/:id', Pub.OpportunityDetail, AUTH],
   ['/communities', Pub.Communities, AUTH],
@@ -209,7 +209,7 @@ function ShellInner({ path, navigate }) {
   const redirect = user && (path === '/' || path === '/login' || path === '/register') ? HOME[user.role] : null;
   useEffect(() => { if (redirect) navigate(redirect, { replace: true }); }, [redirect, navigate]);
   const needLogin = user === null && match && match.access !== null;
-  useEffect(() => { if (needLogin) navigate('/?next=' + encodeURIComponent(path), { replace: true }); }, [needLogin, path, navigate]);
+  useEffect(() => { if (needLogin) navigate('/login?next=' + encodeURIComponent(path), { replace: true }); }, [needLogin, path, navigate]);
 
   // Canonical link and document title follow the route.
   useEffect(() => {
@@ -248,11 +248,12 @@ function ShellInner({ path, navigate }) {
 
   const showNav = !!user && path !== '/student/hours/summary';
   const authScreen = !user && ['/', '/login', '/register', '/forgot-password'].includes(path);
+  const startScreen = !user && path === '/';
 
   return (
     <div className="shell">
       <a href="#main" className="skip">{t('common.skip')}</a>
-      <header className="app-header">
+      <header className={`app-header ${startScreen ? 'hidden' : ''}`}>
         {!authScreen && (
           <Link to={user ? HOME[user.role] : '/'} className="brand" aria-label={`${t('app.name')}${user ? ', ' + t('nav.home') : ''}`}>
             <img src="/logo-wordmark.png" alt="" width="73" height="34" />
@@ -276,7 +277,7 @@ function ShellInner({ path, navigate }) {
       </header>
       {!online && <div className="offline" role="status">{t('common.offline')}</div>}
       <div className="body" ref={scrollerRef}>
-        <main id="main" ref={mainRef} tabIndex={-1} className={showNav ? '' : 'no-nav'}>
+        <main id="main" ref={mainRef} tabIndex={-1} className={`${showNav ? '' : 'no-nav'} ${startScreen ? 'start' : ''}`}>
           <div className="screen" key={path}>{content}</div>
         </main>
       </div>

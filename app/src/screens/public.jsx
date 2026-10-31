@@ -241,6 +241,37 @@ function LandingLogo({ intro }) {
   );
 }
 
+/** First screen for someone who is not signed in. */
+export function Start() {
+  const { t, lang, setLang } = useI18n();
+  return (
+    <div className="start-screen">
+      <div className="lang-seg" role="radiogroup" aria-label={t('profile.language')}>
+        <button type="button" role="radio" aria-checked={lang === 'en'} onClick={() => setLang('en')} lang="en">EN</button>
+        <button type="button" role="radio" aria-checked={lang === 'ar'} onClick={() => setLang('ar')} lang="ar">العربية</button>
+      </div>
+      <div className="start-top">
+        <img src="/logo-full.png" alt={`${t('app.name')}, ${t('app.tagline')}`} width="260" height="139" className="start-logo" />
+        <h1>{t('start.title')}</h1>
+        <p>{t('start.body')}</p>
+      </div>
+      <div className="start-scene" role="img" aria-label={t('start.sceneAlt')} />
+      <div className="start-sheet">
+        <ul className="start-features">
+          {[['shieldCheck', 'start.f1'], ['users', 'start.f2'], ['globe', 'start.f3']].map(([ic, k]) => (
+            <li key={k}><span aria-hidden="true"><Icon name={ic} size={22} /></span>{t(k)}</li>
+          ))}
+        </ul>
+        <div className="stack">
+          <Link to="/register" className="btn btn-signal btn-block start-cta">{t('start.cta')}<Icon name="chev" size={18} /></Link>
+          <Link to="/login" className="btn btn-secondary btn-block start-cta">{t('auth.login')}</Link>
+        </div>
+        <LegalLinks />
+      </div>
+    </div>
+  );
+}
+
 /** The app's first screen: sign in, then everything else opens up. */
 export function Login() {
   const { t, lang } = useI18n();
@@ -259,6 +290,7 @@ export function Login() {
   };
   return (
     <div className="landing">
+      <div className="row"><Link to="/" className="icon-btn" aria-label={t('common.back')} style={{ color: 'var(--teal-strong)' }}><Icon name="back" /></Link></div>
       <LandingLogo intro={`${lang === 'ar' ? t('app.tagline') + '. ' : ''}${t('auth.intro')}`} />
       <form className="panel stack" method="post" onSubmit={(e) => { e.preventDefault(); submit(); }} noValidate>
         <h1 style={{ fontSize: 'var(--fs-l)' }}>{t('auth.login')}</h1>
@@ -330,7 +362,7 @@ export function Register() {
           {(p) => <input className="input" {...p} type="password" autoComplete="new-password" value={f.password} onChange={set('password')} dir="ltr" />}
         </FormField>
         <Button type="submit" variant="signal" busy={act.busy} block>{t('auth.signup')}</Button>
-        <p className="small">{t('auth.haveAccount')} <Link to="/">{t('auth.login')}</Link></p>
+        <p className="small">{t('auth.haveAccount')} <Link to="/login">{t('auth.login')}</Link></p>
         <p className="xs muted">{t('auth.termsNote')} <Link to="/terms">{t('nav.terms')}</Link>{t('common.listSep')}<Link to="/privacy">{t('nav.privacy')}</Link></p>
       </form>
     </div>
@@ -341,10 +373,10 @@ export function ForgotPassword() {
   const { t } = useI18n();
   return (
     <div className="auth-wrap stack-l">
-      <PageHeader backTo="/" title={t('forgot.title')} />
+      <PageHeader backTo="/login" title={t('forgot.title')} />
       <div className="note warn"><strong>{t('forgot.unavailableTitle')}</strong>{t('forgot.unavailableBody')}</div>
       <p className="small">{t('forgot.demo')}</p>
-      <Link to="/" className="btn btn-primary">{t('auth.login')}</Link>
+      <Link to="/login" className="btn btn-primary">{t('auth.login')}</Link>
     </div>
   );
 }
