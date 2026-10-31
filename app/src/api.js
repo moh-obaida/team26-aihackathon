@@ -8,12 +8,16 @@ export class ApiError extends Error {
   }
 }
 
+// Empty by default: the app is served by the API. Set VITE_API_BASE to the API origin when the
+// frontend is hosted separately (e.g. https://api.example.com).
+const BASE = (import.meta.env.VITE_API_BASE || '').replace(/\/+$/, '');
+
 export async function api(path, { method = 'GET', body } = {}) {
   let res;
   try {
-    res = await fetch('/api' + path, {
+    res = await fetch(BASE + '/api' + path, {
       method,
-      credentials: 'same-origin',
+      credentials: 'include',
       headers: { 'content-type': 'application/json', 'x-requested-with': 'team26' },
       body: body === undefined ? undefined : JSON.stringify(body),
     });

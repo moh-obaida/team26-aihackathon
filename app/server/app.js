@@ -21,7 +21,7 @@ const MIME = {
   '.woff': 'font/woff', '.png': 'image/png', '.ico': 'image/x-icon',
 };
 
-export function createApp({ dbPath = ':memory:', demo = false, secureCookies = false, staticDir = null, authLimit = 20, trustProxy = false } = {}) {
+export function createApp({ dbPath = ':memory:', demo = false, secureCookies = false, staticDir = null, authLimit = 20, trustProxy = false, allowedOrigins = [], crossSiteCookies = false } = {}) {
   const db = openDb(dbPath);
   const q = (sql, ...a) => db.prepare(sql).all(...a);
   const q1 = (sql, ...a) => db.prepare(sql).get(...a);
@@ -1373,6 +1373,24 @@ export function createApp({ dbPath = ':memory:', demo = false, secureCookies = f
   async function handleApi(req, res, url) {
     const ip = clientIp(req);
     const method = req.method;
+
+    // A separately hosted frontend calls us cross-origin: echo only explicitly allowed origins.
+    const origin = req.headers.origin;
+    if (origin && allowedOrigins.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Vary', 'Origin');
+      if (method === 'OPTIONS') {
+        res.writeHead(204, {
+          'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'content-type, x-requested-with',
+          'Access-Control-Max-Age': '600',
+          ...SEC_HEADERS,
+        });
+        return res.end();
+      }
+    }
+
     let matched = null;
     let pathAllowed = false;
     for (const r of routes) {
@@ -1386,10 +1404,11 @@ export function createApp({ dbPath = ':memory:', demo = false, secureCookies = f
     if (!matched) return send(res, pathAllowed ? 405 : 404, { error: pathAllowed ? 'method_not_allowed' : 'not_found' });
     const { r, params } = matched;
     const cookies = [];
-    const cookieBase = `Path=/; HttpOnly; SameSite=Lax${secureCookies ? '; Secure' : ''}`;
+    // A separately hosted frontend on another site needs SameSite=None (which in turn requires Secure).
+    const cookieBase = `Path=/; HttpOnly; SameSite=${crossSiteCookies ? 'None; Secure' : `Lax${secureCookies ? '; Secure' : ''}`}`;
     try {
       if (method !== 'GET') {
-        // CSRF: custom header cannot be sent cross-site without a CORS preflight, which we never allow.
+        // CSRF: the custom header forces a CORS preflight, which only an ALLOWED_ORIGINS entry passes.
         if (req.headers['x-requested-with'] !== 'team26') throw forbidden('csrf');
       }
       const user = getUserFromReq(req);

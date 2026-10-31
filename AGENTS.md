@@ -63,6 +63,11 @@ docker compose -f docker-compose.base44.yml up -d --build   # then http://localh
 
 Prefer this over `app/Dockerfile`, which builds a production image and freezes the source.
 
+Split hosting (frontend on Vercel, API in the container) is documented in `app/DEPLOY.md` §1b.
+The client reads `VITE_API_BASE` at build time (`app/src/api.js`); the server answers CORS only for
+`ALLOWED_ORIGINS` and switches the session cookie to `SameSite=None; Secure` when `COOKIE_SAMESITE=none`.
+Before a split deploy, run the suite: `npm test` (now `node --test test/*.test.js`, which Node 24 requires).
+
 ## Rules
 
 - The two imported folders are unmodified copies of their source repos. Their own `AGENTS.md`, tests and

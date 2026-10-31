@@ -31,6 +31,27 @@ Do not run a public deployment with `DEMO=1` once real people use it.
 
 Reset demo data any time: `npm run seed` (wipes and re-seeds the database file; stop the server first).
 
+## 1b. Split hosting: Vercel frontend + API container
+
+Vercel cannot run this app on its own (it serves static files and short-lived functions; Jeran needs one Node process with a writable SQLite file). Host the **frontend on Vercel** and the **API on the container image** from step 1.
+
+**Vercel project:** import the repo, set **Root Directory** to `app`, and add an environment variable
+
+| Variable | Value |
+|---|---|
+| `VITE_API_BASE` | the API origin, e.g. `https://api.example.com` |
+
+`app/vercel.json` supplies the build (`npm run build` → `dist`) and the SPA fallback for deep links. `VITE_API_BASE` is inlined at build time, so set it before the first deploy and redeploy after changing it.
+
+**API container:** run the same image as step 1, plus
+
+| Variable | Value | Why |
+|---|---|---|
+| `ALLOWED_ORIGINS` | the exact frontend origin(s), comma-separated, e.g. `https://jeran.vercel.app,https://app.example.com` | CORS with credentials is answered only for these origins |
+| `COOKIE_SAMESITE` | `none` | session cookie becomes `SameSite=None; Secure` (needed only when frontend and API are on **different sites**) |
+
+Use subdomains of one domain (`app.example.com` + `api.example.com`) rather than `vercel.app` + `onrender.com`: they are the same site, so the default `SameSite=Lax` cookie keeps working and browsers' third-party-cookie blocking does not apply. With `COOKIE_SAMESITE=none` across different sites, Safari and Chrome do block the session cookie, and sign-in will silently fail.
+
 ## 2. Install on a phone
 
 **iPhone / iPad (Safari only):** open the URL in Safari → Share → **Add to Home Screen** → Add. Open it from the home-screen icon; it runs full screen with no Safari toolbar.
